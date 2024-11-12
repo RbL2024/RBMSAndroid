@@ -1,0 +1,50 @@
+{
+  "expo": {
+    "name": "rbmsa",
+    "slug": "rbmsa",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/rbms_logo.png",
+    "scheme": "rbmsa",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/images/rbms_logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "##355E3B"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#D6D6CA"
+      },
+      "permissions": ["NOTIFICATIONS","BLUETOOTH", "BLUETOOTH_ADMIN"],
+      "package": "com.rb2024.rbmsa",
+      "versionCode": 1
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "31cf7fdc-2e7a-4df3-b5e4-20c139774355"
+      }
+    },
+    "notification": {
+      "icon": "./assets/images/rbms_logo.png",
+      "color": "#000000",
+      "androidMode": "default",
+      "androidCollapsedTitle": "View message"
+    }
+  }
+}
