@@ -74,7 +74,8 @@ const Account = () => {
     setLoading(true);
     await delay(2000);
     try {
-      await AsyncStorage.clear(); // Remove login status from AsyncStorage
+      await AsyncStorage.removeItem('isLoggedIn'); // Remove login status from AsyncStorage
+      await AsyncStorage.removeItem('bike_id');
       setIsLoggedIn(false); // Update state to reflect logged out status
       nav.navigate('index');
     } catch (error) {

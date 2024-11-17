@@ -8,7 +8,7 @@ import bikeLogo from '../../assets/images/bikeLogo.png';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginAPI } from '@/hooks/myAPI';
+import { loginAPI, getResBike, getResInfobyEmail } from '@/hooks/myAPI';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -20,16 +20,22 @@ const setLoggedIn = async (isLoggedIn) => {
     }
 };
 
-const storeData = async (cId, cName, cAddress, cPhone, cBDay, cEmail) => {
+const storeData = async (userData) => {
     try {
-        await AsyncStorage.setItem('id', cId);
-        await AsyncStorage.setItem('name', cName);
-        await AsyncStorage.setItem('address', cAddress);
-        await AsyncStorage.setItem('phone', cPhone);
-        await AsyncStorage.setItem('bday', cBDay);
-        await AsyncStorage.setItem('email', cEmail);
+        const keys = Object.keys(userData);
+        for (const key of keys) {
+            await AsyncStorage.setItem(key, userData[key]);
+        }
     } catch (e) {
         console.error('Failed to save data', e);
+    }
+};
+
+const storeBikeId = async (bikeId) => {
+    try {
+        await AsyncStorage.setItem('bike_id', bikeId);
+    } catch (error) {
+        console.error('Error storing bike ID:', error);
     }
 };
 
@@ -45,7 +51,6 @@ export default function Login() {
         setPassword('');
     }
 
-
     const handleLogin = async () => {
         if (username === '' || password === '') {
             Toast.error('Please fill in all fields');
@@ -53,35 +58,39 @@ export default function Login() {
         }
         setLoading(true);
         try {
-            const data = {
-                i_username: username,
-                i_password: password
-            }
-            const logAcc = await axios.post(loginAPI, data);
+            const response = await axios.post(loginAPI, { i_username: username, i_password: password });
+            const { isFound, message, loginData } = response.data;
 
-            if (logAcc.data.isFound) {
-                Toast.success(logAcc.data.message);
+            if (isFound) {
+                Toast.success(message);
                 setLoggedIn(true);
 
-                const cId = logAcc.data.loginData._id;
-                const cName = logAcc.data.loginData.c_first_name + " " + String(logAcc.data.loginData.c_middle_name).charAt(0) + ". " + logAcc.data.loginData.c_last_name
-                const cAddress = logAcc.data.loginData.c_full_address.street + ", " + logAcc.data.loginData.c_full_address.city + ", " +  logAcc.data.loginData.c_full_address.province 
-                const cPhone = logAcc.data.loginData.c_phone
-                const cBDay = logAcc.data.loginData.c_bdate;
-                const cEmail = logAcc.data.loginData.c_email;
-                storeData(cId, cName, cAddress, cPhone, cBDay, cEmail);
+                const userData = {
+                    id: loginData._id,
+                    name: `${loginData.c_first_name} ${loginData.c_middle_name.charAt(0)}. ${loginData.c_last_name}`,
+                    address: `${loginData.c_full_address.street}, ${loginData.c_full_address.city}, ${loginData.c_full_address.province}`,
+                    phone: loginData.c_phone,
+                    bday: loginData.c_bdate,
+                    email: loginData.c_email,
+                };
+                await storeData(userData);
+
+                const bikeReserveResponse = await axios.get(`${getResInfobyEmail}/${loginData.c_email}`);
+                const bikeId = bikeReserveResponse.data.bike_id; // Adjust according to your API response structure
+                await storeBikeId(bikeId);
+
                 await delay(2000);
                 clearInputs();
                 nav.navigate('account');
             } else {
-                Toast.error(logAcc.data.message);
+                Toast.error(message);
             }
         } catch (error) {
-            console.log(error)
+            console.error('Login error:', error);
+            Toast.error('An error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
-
     }
 
 

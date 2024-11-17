@@ -45,6 +45,7 @@ export const loginAPI = `${apiServer}/rbmsa/loginAcc`;
 export const registerAPI = `${apiServer}/rbmsa/createUser`;
 export const reserveAPI = `${apiServer}/rbmsa/UpdateReserve`;
 export const getResInfo = `${apiServer}/rbmsa/getReservations`;
+export const getResInfobyEmail = `${apiServer}/rbmsa/getReservationsviaEmail`;
 export const getResBike = `${apiServer}/rbmsa/reservedBike`;
 export const getResBikeAll = `${apiServer}/rbmsa/getAllUser-Reservations`;
 export const cancelReservation = `${apiServer}/rbmsa/cancelReservation`;

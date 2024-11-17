@@ -335,6 +335,7 @@ export default function Timetrack() {
   };
 
   const [rented, setRented] = useState(false);
+  
 
   return (
     rented?(
