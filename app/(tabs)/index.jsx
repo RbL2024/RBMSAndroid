@@ -49,7 +49,12 @@ const Card = ({ title, description, imageSource, status }) => {
         style={styles.imageBackground}
         imageStyle={styles.image}
       >
-        {status === 'reserved' ? <View style={[styles.overlay]}><Text style={{ color: 'white', textAlign: 'center', fontSize: 24, fontFamily: 'mplusb' }}>Reserved</Text></View> : null}
+        {status === 'RESERVED' ? 
+          <View style={[styles.overlay]}><Text style={{ color: 'white', textAlign: 'center', fontSize: 24, fontFamily: 'mplusb' }}>Reserved</Text></View> 
+          : status === 'RENTED' ?
+          <View style={[styles.overlay]}><Text style={{ color: 'white', textAlign: 'center', fontSize: 24, fontFamily: 'mplusb' }}>Rented</Text></View> 
+          : null
+        }
         <View style={styles.cardContent}>
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
           <Text style={styles.description}>{description}</Text>
@@ -100,7 +105,7 @@ export default function Index() {
         end={{ x: 0, y: 0.35 }}
         style={{ flex: 1, position: "relative" }}
       >
-        <View style={styles.searchContainer}>
+        {/* <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
             placeholder="Search"
@@ -124,7 +129,7 @@ export default function Index() {
               style={styles.searchIcon}
             />
           )}
-        </View>
+        </View> */}
         <View style={styles.homeNav}>
           <Link href="/adults">
             <View style={styles.hnlink}>
@@ -213,7 +218,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 30,
-    marginTop: 30,
+    marginTop: 60,
   },
   hnlink: {
     display: "flex",

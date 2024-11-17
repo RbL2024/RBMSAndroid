@@ -154,7 +154,8 @@ const styles = StyleSheet.create({
         width: RDim.width * 0.5,
         height: RDim.height * 0.25,
         alignSelf: 'center',
-        marginTop: 65
+        marginTop: 65,
+        objectFit: 'contain'
     },
     googleImage: {
         width: RDim.width * 0.065, // Set the desired width

@@ -132,30 +132,39 @@ function formatDateTime(dateString) {
 }
 
 
-
-
-
 export default function Timetrack() {
   const nav = useNavigation();
   const [reservedTime, setReservedTime] = useState('00:00');
   const [duration, setDuration] = useState(0);
   const [hoursLate, setHoursLate] = useState('');
   const [canceled, setCanceled] = useState(false);
-  const [bikeIdEmail, setBikeIdEmail] = useState([]);
+  const [bikeIdEmail, setBikeIdEmail] = useState({});
   const [reservedBike, setReservedBike] = useState([]);
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
 
-
-
+  const showAlertAndNavigate = () => {
+    Alert.alert(
+      "Information",
+      "You don't have a bike reservation. Please reserve a bike first.",
+      [
+        {
+          text: "OK",
+          onPress: () => nav.navigate('index'), // Navigate to index
+        },
+      ],
+      { cancelable: false }
+    );
+  };
 
   const loadResTime = async () => {
-    try {
-      const data = bikeIdEmail;
-      if (!data) {
-        console.error('Bike ID is undefined. Cannot load reservation time.');
-        return; // Exit if bikeId is not set
-      }
+    if (!bikeIdEmail.bID || !bikeIdEmail.email) {
+      showAlertAndNavigate();
+      return;
+    }
 
-      const loadRTime = await axios.post(getResInfo, data);
+    try {
+      const loadRTime = await axios.post(getResInfo, bikeIdEmail);
       const resTime = loadRTime.data.timeofuse;
 
       if (resTime) {
@@ -164,51 +173,68 @@ export default function Timetrack() {
         setHoursLate('00:00');
       }
     } catch (error) {
-      console.error('Error loading reserved time:', error.response ? error.response.data : error.message);
-      setHoursLate('00:00');
+      console.error('Error loading reserved time:', error);
+      setError('Failed to load reservation time.');
     }
   };
 
   const getReservedBike = async () => {
-    try {
-      const data = bikeIdEmail;
-      const response = await axios.post(getResBike, data);
+    if (!bikeIdEmail.bID || !bikeIdEmail.email) {
+      showAlertAndNavigate();
+      return;
+    }
 
+    try {
+      const response = await axios.post(getResBike, bikeIdEmail);
       const bikeInfo = response.data.bikeInfo || [];
       const reservationsToday = response.data.reservationsToday || [];
 
       const combinedBikeData = bikeInfo.map((bike, index) => ({
         ...bike,
         ...reservationsToday[index],
-      }));
+      })).filter(bike => bike.bike_image_url); // Filter out bikes without an image
 
       setReservedBike(combinedBikeData);
     } catch (error) {
-      console.error('Error fetching reserved bikes:', error.response);
+      console.error('Error fetching reserved bikes:', error);
+      setError('Failed to fetch reserved bikes.');
     }
   };
 
-
-  // UseEffect to get bike ID and email once
   useEffect(() => {
-    const getbid = async () => {
-      setBikeIdEmail(await getBikeIdEmail());
-    }
-    getbid();
+    const fetchBikeIdEmail = async () => {
+      try {
+        const bID = await AsyncStorage.getItem('bike_id');
+        const email = await AsyncStorage.getItem('email');
+        if (bID && email) {
+          setBikeIdEmail({ bID, email });
+        } else {
+          showAlertAndNavigate();
+        }
+      } catch (e) {
+        console.error('Failed to fetch data', e);
+        showAlertAndNavigate();
+      }
+    };
+
+    fetchBikeIdEmail();
   }, []);
 
-  // UseEffect to load reservation time and reserved bike data
   useEffect(() => {
     const fetchReservationData = async () => {
-      await loadResTime(); // Wait for loadResTime to complete
-      await getReservedBike(); // Then call getReservedBike
+      if (bikeIdEmail.bID && bikeIdEmail.email) {
+        await loadResTime();
+        await getReservedBike();
+        setLoading(false); // Set loading to false after fetching data
+      }
     };
 
     fetchReservationData();
   }, [bikeIdEmail]);
 
-  // UseEffect for updating hours late
   useEffect(() => {
+    if (reservedTime === '00:00') return; // Wait for reservedTime to load
+
     const reservedSeconds = timeToSeconds(convertRTime(reservedTime));
     const now = new Date();
     const currentSeconds = timeToSeconds(formatTime(now));
@@ -224,15 +250,15 @@ export default function Timetrack() {
         setHoursLate(secondsToTime(Math.abs(timeDifference)));
         if (secondsToTime(Math.abs(timeDifference)) >= 3600) {
           setCanceled(true);
-          Alert.alert('Information', 'You are 1 hours late, your reservation is now canceled', 
+          Alert.alert('Information', 'You are 1 hour late, your reservation is now canceled', 
             [
               {
                 text: "Okay",
-                onPress:async()=>{
-                  nav.navigate('index')
+                onPress: async () => {
+                  nav.navigate('index');
                 }
               }
-            ])
+            ]);
           updateReservationStatusToCancel();
         } else {
           setCanceled(false);
@@ -247,6 +273,15 @@ export default function Timetrack() {
     };
   }, [reservedTime]);
 
+
+  const deleteBikeId = async () => {
+    try {
+      await AsyncStorage.removeItem('bike_id'); // Replace 'bike_id' with the key you want to delete
+      console.log('Bike ID has been removed from AsyncStorage');
+    } catch (error) {
+      console.error('Error removing bike ID from AsyncStorage:', error);
+    }
+  };
   const handleCancelReserve = async () => {
     if (reservedTime !== '00:00') {
       Alert.alert(
@@ -264,9 +299,9 @@ export default function Timetrack() {
               try {
                 await updateReservationStatusToCancel();
                 Toast.info('Your reservation has been canceled.');
+                deleteBikeId();
                 await delay(2000);
                 nav.navigate('index');
-                // Optional: Show a toast message
               } catch (error) {
                 console.error('Error canceling reservation:', error);
               }
@@ -278,12 +313,22 @@ export default function Timetrack() {
     }
   };
 
+  const automaticCancel = async () => {
+    try {
+      await updateReservationStatusToCancel();
+      Toast.info('Your reservation has been automatically canceled.');
+      await delay(2000);
+      nav.navigate('index');
+    } catch (error) {
+      console.error('Error canceling reservation:', error);
+    }
+  };
+
   const updateReservationStatusToCancel = async () => {
     try {
       const data = bikeIdEmail; // Assuming you have the necessary data to identify the reservation
-      console.log(cancelReservation);
-      const response = await axios.put(cancelReservation, data); // Replace with your actual API endpoint
-      console.log(response.data);
+      const response = await axios.put(cancelReservation, data);
+      // console.log(response.data);
     } catch (error) {
       console.error('Error updating reservation status:', error.response ? error.response.data : error.message);
     }
@@ -303,6 +348,7 @@ export default function Timetrack() {
     >
       <ToastManager
         position="top"
+        width={'auto'}
         textStyle={{ fontSize: 12, paddingHorizontal: 10 }}
         duration={2000}
         showCloseIcon={false}
@@ -321,11 +367,10 @@ export default function Timetrack() {
           const now = new Date();
           const currentSeconds = timeToSeconds(formatTime(now));
           const reservedSeconds = timeToSeconds(convertRTime(reservedTime));
-          console.log(currentSeconds, reservedSeconds);
+          // console.log(currentSeconds, reservedSeconds);
           if (currentSeconds >= reservedSeconds) {
-            setDisableCBTN(false); // Enable the cancel button when the timer completes
+            automaticCancel();
           }
-
           return { shouldRepeat: false }; // Prevents the timer from repeating
         }}
       >
@@ -359,9 +404,9 @@ export default function Timetrack() {
                 <View key={bike.bike_id} style={styles.bcardCon}>
                   <Image source={{ uri: bike.bike_image_url }} style={styles.bimage} />
                   <View style={styles.btextContainer}>
-                    <Text style={styles.bdate}>rented date: {formatDateTime(bike.reservation_date)}</Text>
+                    <Text style={styles.bdate}>Reservation No.: {bike.reservation_number}</Text>
                     <Text style={styles.bname}>bike id: {bike.bike_id}</Text>
-                    <Text style={styles.bcontact}>Gcash #: {bike.phone}</Text>
+                    <Text style={styles.bcontact}>Duration: {bike.duration} Hr/s</Text>
                   </View>
                 </View>
               )

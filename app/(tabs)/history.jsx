@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { StyleSheet, Text, View, ScrollView, Image } from "react-native";
 import RDim from "@/hooks/useDimensions";
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,12 +7,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getResBikeAll } from "@/hooks/myAPI";
 import axios from "axios";
 
-const getBikeIdEmail = async () => {
+
+const getEmail = async () => {
   try {
-    const bID = await AsyncStorage.getItem('bike_id');
     const email = await AsyncStorage.getItem('email');
-    if (bID !== null && email !== null) {
-      return { bID, email };
+    if (email !== null) {
+      return email;
     } else {
       return 'undefined';
     }
@@ -23,46 +24,63 @@ const getBikeIdEmail = async () => {
 
 const History = () => {
   // Sample data
-  const [bikeIdEmail, setBikeIdEmail] = useState([]);
+  const [email, setEmail] = useState([]);
   const [datagathered, setDatagathered] = useState([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkLoginStatusAndEmail = async () => {
+        try {
+          const loginValue = await AsyncStorage.getItem('isLoggedIn');
+          if (loginValue !== null) {
+            const loggedIn = JSON.parse(loginValue);
+            setIsLoggedIn(loggedIn);
+
+            if (loggedIn) {
+              const emailValue = await AsyncStorage.getItem('email');
+
+              setEmail(emailValue || 'undefined');
+            }
+          } else {
+            setIsLoggedIn(false);
+          }
+        } catch (error) {
+          console.error('Error retrieving data:', error);
+        }
+      };
+
+      checkLoginStatusAndEmail();
+    }, [])
+  );
 
   const getReservedBike = async () => {
+    if (!email || email === 'undefined') return; // Prevent fetching if email is not set
+
     try {
-      const data = bikeIdEmail;
+      const data = { email: email };
       const response = await axios.post(getResBikeAll, data);
-      // console.log('API Response:', response.data); // Log the API response
-
-      // Extract the records from the response
-      const records = response.data.records || [];
-
-      // Set the gathered data directly from records
+      // console.log(response.data);
+      const records = response.data.records;
       setDatagathered(records);
     } catch (error) {
-      console.error('Error fetching reserved bikes:', error); // Log the entire error object
+      console.error('Error fetching reserved bikes:', error);
     }
   };
 
   useEffect(() => {
-    const getbid = async () => {
-      setBikeIdEmail(await getBikeIdEmail());
+    if (isLoggedIn) {
+      getReservedBike(); // Fetch data only if logged in
+
+      const intervalId = setInterval(() => {
+        getReservedBike(); // Fetch every 5 seconds
+      }, 5000);
+
+      return () => clearInterval(intervalId); // Cleanup on unmount
+    } else {
+      setDatagathered([]);
     }
-    getbid();
-  }, []);
-
-  useEffect(() => {
-    const fetchReservationData = () => {
-      getReservedBike(); // Then call getReservedBike
-    };
-    fetchReservationData();
-    const intervalId = setInterval(() => {
-      fetchReservationData(); // Fetch every 5 seconds
-    }, 5000);
-
-    // Clear the interval on component unmount
-
-    return () => clearInterval(intervalId);
-    
-  }, [bikeIdEmail]);
+  }, [isLoggedIn, email]);
 
   // console.log(datagathered);
 
@@ -76,13 +94,31 @@ const History = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {datagathered.map((item, index) => (
           <View key={index} style={styles.card}>
-            <Image source={{uri:item.bikeInfo.bike_image_url}} style={styles.image} resizeMode="contain" />
-            <View style={styles.textContainer}>
-              <Text style={styles.date}>rented date: {new Date(item.reservation_date).toLocaleDateString()}</Text>
-              <Text style={styles.name}>bike name: {item.bikeInfo.bike_name}</Text>
-              <Text style={styles.contact}>Gcash #: {item.phone}</Text>
-              <Text style={styles.contact}>Rent Paid: {item.totalBikeRentPrice}</Text>
-            </View>
+            {item.bikeInfo ? (
+              <>
+                <Image
+                  source={{ uri: item.bikeInfo.bike_image_url }}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+                <View style={styles.textContainer}>
+                  <Text style={styles.date}>
+                    rented date: {new Date(item.reservation_date).toLocaleDateString()}
+                  </Text>
+                  <Text style={styles.name}>
+                    bike name: {item.bikeInfo.bike_name}
+                  </Text>
+                  <Text style={styles.contact}>
+                    Rent Paid: {item.totalBikeRentPrice}
+                  </Text>
+                  <Text style={styles.contact}>
+                    Remarks: {item.bikeStatus}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              null
+            )}
           </View>
         ))}
       </ScrollView>

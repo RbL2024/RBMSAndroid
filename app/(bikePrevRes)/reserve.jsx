@@ -184,7 +184,7 @@ const Reserve = () => {
             duration: dou.toString(),
             totalReservationFee: totalFee.toString(),
             totalBikeRentPrice: totalBikeFee.toString(),
-            bike_status: "reserved",
+            bike_status: "RESERVED",
             ...userData
         }
 
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
         paddingStart: 40,
         backgroundColor: '#FFF',
         fontFamily: 'mplus',
-        fontSize: RDim.width * .045,
+        fontSize: RDim.width * .04,
         textAlign: 'center'
     },
     douinput: {
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         backgroundColor: '#FFF',
         fontFamily: 'mplus',
-        fontSize: RDim.width * .05,
+        fontSize: RDim.width * .04,
         textAlign: 'center'
     },
     iconButton: {

@@ -14,6 +14,7 @@ const HorizontalLine = ({ color = 'gray', thickness = 1.5, mv = 5, style }) => {
   };
 
 export default function Rentdue() {
+  
   return (
     <LinearGradient
       colors={["#355E3B", "#D6D6CA"]} // Define your gradient colors here
@@ -53,7 +54,7 @@ export default function Rentdue() {
               <HorizontalLine style={{ width: RDim.width * .5 }} />
               <View style={{ alignItems: 'center' }}>
                 <Text style={styles.currentTimeText}>00:00</Text>
-                <Text style={styles.default}>Hours Late</Text>
+                <Text style={styles.default}>Over Time</Text>
               </View>
             </View>
           </>
@@ -83,13 +84,13 @@ export default function Rentdue() {
           }
         </View>
       </View>
-      <View style={btnCon.container}>
+      {/* <View style={btnCon.container}>
         <TouchableOpacity onPress={{}}>
           <View style={[btnCon.btn, { backgroundColor: '#AB0505' }]}>
             <Text style={btnCon.text}>Cancel Reservation</Text>
           </View>
         </TouchableOpacity>
-      </View>
+      </View> */}
     </LinearGradient>
   )
 }
