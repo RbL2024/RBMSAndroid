@@ -11,6 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { reserveAPI } from '@/hooks/myAPI';
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -40,7 +42,6 @@ const getData = async () => {
 };
 
 const Reserve = () => {
-
     const formatTime = (date) => {
         const hours = date.getHours();
         const minutes = String(date.getMinutes()).padStart(2, '0');
@@ -317,20 +318,20 @@ const Reserve = () => {
 
                 </View>
                 <View style={{ position: 'absolute', bottom: 25, width: RDim.width }}>
-                    <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
+                    {/* <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
                         <Text style={{ fontSize: RDim.width * 0.040, fontFamily: 'mplus' }}>Reservation Fee:</Text>
                         <Text style={{ fontSize: RDim.width * 0.040, fontFamily: 'mplus' }}>&#8369;25</Text>
-                    </View>
+                    </View> */}
                     {/* <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
                         <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>Duration of use Fee:</Text>
                         <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>&#8369;{durationFee}</Text>
                     </View> */}
-                    <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
+                    {/* <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
                         <Text style={{ fontSize: RDim.width * 0.040, fontFamily: 'mplus' }}>Reserve hour Fee:</Text>
                         <Text style={{ fontSize: RDim.width * 0.040, fontFamily: 'mplus' }}>&#8369;25</Text>
-                    </View>
+                    </View> */}
                     <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
-                        <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>Total Fee:</Text>
+                        <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>Reservation Fee:</Text>
                         <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>&#8369;{totalFee}</Text>
                     </View>
                     <HorizontalLine/>

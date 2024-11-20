@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "axios";
 
-const localAPI = 'http://192.168.1.10:8917';
+const localAPI = 'http://192.168.1.2:8917';
 const cloudAPI = 'https://rbms-backend-g216.onrender.com';
 const apiServer = localAPI; // Change this to localAPI for local testing
 
@@ -47,5 +47,11 @@ export const reserveAPI = `${apiServer}/rbmsa/UpdateReserve`;
 export const getResInfo = `${apiServer}/rbmsa/getReservations`;
 export const getResInfobyEmail = `${apiServer}/rbmsa/getReservationsviaEmail`;
 export const getResBike = `${apiServer}/rbmsa/reservedBike`;
+export const checkBStat = `${apiServer}/rbmsa/checkBStat`;
+export const getRentedBike = `${apiServer}/rbmsa/getRentedBike`;
 export const getResBikeAll = `${apiServer}/rbmsa/getAllUser-Reservations`;
 export const cancelReservation = `${apiServer}/rbmsa/cancelReservation`;
+
+export const getRentedBikeReserve = `${apiServer}/esp32/getRentedBikeReserve`;
+export const updateLockstate = `${apiServer}/esp32/updateLockState`;
+export const updateAlarmstate = `${apiServer}/esp32/updateAlarmState`;

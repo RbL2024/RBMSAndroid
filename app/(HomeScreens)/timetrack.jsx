@@ -6,11 +6,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import ToastManager, { Toast } from 'toastify-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import { getResInfo, getResBike, cancelReservation, reserveAPI } from '@/hooks/myAPI';
+import { getResInfo, getResBike, cancelReservation, checkBStat } from '@/hooks/myAPI';
 import { useNavigation } from '@react-navigation/native';
 import Rentdue from './rentdue';
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+
 
 function formatTimeWithHours(seconds) {
   const totalSeconds = Math.floor(seconds);
@@ -96,21 +100,6 @@ const HorizontalLine = ({ color = 'gray', thickness = 1.5, mv = 5, style }) => {
   return <View style={[styles.line, { backgroundColor: color, height: thickness, marginVertical: mv }, style]} />;
 };
 
-
-const getBikeIdEmail = async () => {
-  try {
-    const bID = await AsyncStorage.getItem('bike_id');
-    const email = await AsyncStorage.getItem('email');
-    if (bID !== null && email !== null) {
-      return { bID, email };
-    } else {
-      return 'undefined';
-    }
-  } catch (e) {
-    console.error('Failed to fetch data', e);
-  }
-};
-
 function formatDateTime(dateString) {
   const date = new Date(dateString);
 
@@ -131,113 +120,110 @@ function formatDateTime(dateString) {
   return `${formattedDateString}`; // Combine date and time
 }
 
+const BACKGROUND_FETCH_TASK = 'BACKGROUND_FETCH_TASK';
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+  try {
+    const bikeId = await AsyncStorage.getItem('bike_id');
+    const email = await AsyncStorage.getItem('email');
 
+    if (bikeId && email) {
+      const bikeIdEmail = { bID: bikeId, email };
+      const { data: { timeofuse: resTime } } = await axios.post(getResInfo, bikeIdEmail);
+
+      // Here you can implement your logic to check if the reservation is late
+      // For example, you can compare the reserved time with the current time
+      // If the reservation is late, call the function to cancel the reservation
+      const currentTime = new Date();
+      const reservedTime = new Date(resTime); // Assuming resTime is in a compatible format
+      if (currentTime > reservedTime) {
+        await updateReservationStatusToCancel(bikeIdEmail); // You need to adjust this function to accept bikeIdEmail
+      }
+    }
+  } catch (error) {
+    console.error('Error in background fetch task:', error);
+  }
+});
 export default function Timetrack() {
   const nav = useNavigation();
   const [reservedTime, setReservedTime] = useState('00:00');
   const [duration, setDuration] = useState(0);
   const [hoursLate, setHoursLate] = useState('');
-  const [canceled, setCanceled] = useState(false);
   const [bikeIdEmail, setBikeIdEmail] = useState({});
   const [reservedBike, setReservedBike] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const [rented, setRented] = useState(false);
+  const [alertShown, setAlertShown] = useState(false);
+
+  useEffect(() => {
+    const registerBackgroundFetch = async () => {
+      await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+        minimumInterval: 15 * 60, // Minimum interval in seconds (15 minutes)
+        stopOnTerminate: false, // Keep running after app is terminated
+        startOnBoot: true, // Start the task when the device boots
+      });
+    };
+
+    registerBackgroundFetch();
+  }, []);
+
+
+  useEffect(() => {
+    const checkBikeStatus = async () => {
+      const bID = await AsyncStorage.getItem('bike_id');
+      const email = await AsyncStorage.getItem('email');
+      if (bID && email) {
+        const data = { bID: bID, email: email };
+        try {
+          const checkBStats = await axios.post(checkBStat, data);
+          const combinedBikeData = checkBStats.data.bikeInfo.map((bike, index) => ({
+            ...bike,
+            ...checkBStats.data.reservationsToday[index],
+          }));
+          const bStat = combinedBikeData.map((bike)=>bike.bikeStatus);
+          
+          if(bStat == "RENTED"){
+            setRented(true);
+            return;
+          }else{
+            setRented(false);
+          }
+
+          // Fetch reservation data
+          const getresTime = await axios.post(getResInfo, data);
+          setReservedTime(getresTime.data.timeofuse || '00:00');
+  
+          const bikeData = await axios.post(getResBike, data);
+          const combinedBikeData2 = bikeData.data.bikeInfo.map((bike, index) => ({
+            ...bike,
+            ...bikeData.data.reservationsToday[index],
+          })).filter(bike => bike.bike_image_url);
+          
+          setReservedBike(combinedBikeData2);
+          console.log(rented);
+        } catch (error) {
+          showAlertAndNavigate();
+        }
+      }else{
+        showAlertAndNavigate();
+      }
+    }
+    checkBikeStatus();
+  }, [rented])
+
 
   const showAlertAndNavigate = () => {
     Alert.alert(
       "Information",
       "You don't have a bike reservation. Please reserve a bike first.",
-      [
-        {
-          text: "OK",
-          onPress: () => nav.navigate('index'), // Navigate to index
-        },
-      ],
+      [{ text: "OK", onPress: () => nav.navigate('index') }],
       { cancelable: false }
     );
   };
 
-  const loadResTime = async () => {
-    if (!bikeIdEmail.bID || !bikeIdEmail.email) {
-      showAlertAndNavigate();
-      return;
-    }
-
-    try {
-      const loadRTime = await axios.post(getResInfo, bikeIdEmail);
-      const resTime = loadRTime.data.timeofuse;
-
-      if (resTime) {
-        setReservedTime(resTime);
-      } else {
-        setHoursLate('00:00');
-      }
-    } catch (error) {
-      console.error('Error loading reserved time:', error);
-      setError('Failed to load reservation time.');
-    }
-  };
-
-  const getReservedBike = async () => {
-    if (!bikeIdEmail.bID || !bikeIdEmail.email) {
-      showAlertAndNavigate();
-      return;
-    }
-
-    try {
-      const response = await axios.post(getResBike, bikeIdEmail);
-      const bikeInfo = response.data.bikeInfo || [];
-      const reservationsToday = response.data.reservationsToday || [];
-
-      const combinedBikeData = bikeInfo.map((bike, index) => ({
-        ...bike,
-        ...reservationsToday[index],
-      })).filter(bike => bike.bike_image_url); // Filter out bikes without an image
-
-      setReservedBike(combinedBikeData);
-    } catch (error) {
-      console.error('Error fetching reserved bikes:', error);
-      setError('Failed to fetch reserved bikes.');
-    }
-  };
-
   useEffect(() => {
-    const fetchBikeIdEmail = async () => {
-      try {
-        const bID = await AsyncStorage.getItem('bike_id');
-        const email = await AsyncStorage.getItem('email');
-        if (bID && email) {
-          setBikeIdEmail({ bID, email });
-        } else {
-          showAlertAndNavigate();
-        }
-      } catch (e) {
-        console.error('Failed to fetch data', e);
-        showAlertAndNavigate();
-      }
-    };
-
-    fetchBikeIdEmail();
-  }, []);
-
-  useEffect(() => {
-    const fetchReservationData = async () => {
-      if (bikeIdEmail.bID && bikeIdEmail.email) {
-        await loadResTime();
-        await getReservedBike();
-        setLoading(false); // Set loading to false after fetching data
-      }
-    };
-
-    fetchReservationData();
-  }, [bikeIdEmail]);
-
-  useEffect(() => {
-    if (reservedTime === '00:00') return; // Wait for reservedTime to load
+    if (reservedTime === '00:00') return;
 
     const reservedSeconds = timeToSeconds(convertRTime(reservedTime));
-    const now = new Date();
-    const currentSeconds = timeToSeconds(formatTime(now));
+    const currentSeconds = timeToSeconds(formatTime(new Date()));
     const initialTimeDifference = reservedSeconds - currentSeconds;
     setDuration(initialTimeDifference > 0 ? initialTimeDifference : 0);
 
@@ -248,63 +234,45 @@ export default function Timetrack() {
 
       if (timeDifference < 0 && reservedTime !== '00:00') {
         setHoursLate(secondsToTime(Math.abs(timeDifference)));
-        if (secondsToTime(Math.abs(timeDifference)) >= 3600) {
-          setCanceled(true);
-          Alert.alert('Information', 'You are 1 hour late, your reservation is now canceled', 
-            [
-              {
-                text: "Okay",
-                onPress: async () => {
-                  nav.navigate('index');
-                }
-              }
-            ]);
-          updateReservationStatusToCancel();
-        } else {
-          setCanceled(false);
-        }
+        // if (Math.abs(timeDifference) >= 3600 && !alertShown) {
+        //   setAlertShown(true);
+        //   Alert.alert('Information', 'You are 1 hour late, your reservation is automatically canceled',
+        //     [{ text: "Okay", onPress: async () => nav.navigate('index') }]);
+        //   updateReservationStatusToCancel();
+        // }
       } else {
         setHoursLate('00:00');
       }
     }, 1000);
 
-    return () => {
-      clearInterval(updateHoursLateInterval);
-    };
-  }, [reservedTime]);
+    return () => clearInterval(updateHoursLateInterval);
+  }, [reservedTime/*, alertShown*/]);
+
 
 
   const deleteBikeId = async () => {
     try {
-      await AsyncStorage.removeItem('bike_id'); // Replace 'bike_id' with the key you want to delete
+      await AsyncStorage.removeItem('bike_id');
       console.log('Bike ID has been removed from AsyncStorage');
     } catch (error) {
       console.error('Error removing bike ID from AsyncStorage:', error);
     }
   };
+
   const handleCancelReserve = async () => {
     if (reservedTime !== '00:00') {
       Alert.alert(
         "Cancel Reservation",
         "Are you sure you want to cancel your reservation?",
         [
+          { text: "Cancel", onPress: () => console.log("Cancel Pressed"), style: "cancel" },
           {
-            text: "Cancel",
-            onPress: () => console.log("Cancel Pressed"),
-            style: "cancel"
-          },
-          {
-            text: "OK",
-            onPress: async () => {
-              try {
-                await updateReservationStatusToCancel();
-                Toast.info('Your reservation has been canceled.');
-                deleteBikeId();
-                await delay(2000);
-                nav.navigate('index');
-              } catch (error) {
-                console.error('Error canceling reservation:', error);
-              }
+            text: "OK", onPress: async () => {
+              await updateReservationStatusToCancel();
+              Toast.info('Your reservation has been canceled.');
+              deleteBikeId();
+              await delay(2000);
+              nav.navigate('index');
             }
           }
         ],
@@ -313,116 +281,105 @@ export default function Timetrack() {
     }
   };
 
-  const automaticCancel = async () => {
-    try {
-      await updateReservationStatusToCancel();
-      Toast.info('Your reservation has been automatically canceled.');
-      await delay(2000);
-      nav.navigate('index');
-    } catch (error) {
-      console.error('Error canceling reservation:', error);
-    }
-  };
-
   const updateReservationStatusToCancel = async () => {
     try {
-      const data = bikeIdEmail; // Assuming you have the necessary data to identify the reservation
-      const response = await axios.put(cancelReservation, data);
-      // console.log(response.data);
+      const response = await axios.put(cancelReservation, bikeIdEmail);
+      console.log(response.data);
     } catch (error) {
       console.error('Error updating reservation status:', error.response ? error.response.data : error.message);
     }
   };
 
-  const [rented, setRented] = useState(false);
-  
+
+
+
 
   return (
-    rented?(
-      <Rentdue/>
-    ):(
+    rented ? (
+      <Rentdue />
+    ) : (
       <LinearGradient
-      colors={["#355E3B", "#D6D6CA"]} // Define your gradient colors here
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 0.35 }}
-      style={styles.container}
-    >
-      <ToastManager
-        position="top"
-        width={'auto'}
-        textStyle={{ fontSize: 12, paddingHorizontal: 10 }}
-        duration={2000}
-        showCloseIcon={false}
-        showProgressBar={false}
-      />
-      <Text style={styles.title}>Reservation Time</Text>
-      <CountdownCircleTimer
-        size={RDim.scale * 100}
-        trailColor='whitesmoke'
-        // isGrowing={true}
-        isPlaying
-        duration={duration} // Set the duration in seconds
-        colors={['#355E3B']} // Colors for the timer
-        onComplete={() => {
-          // Action to take when the timer completes
-          const now = new Date();
-          const currentSeconds = timeToSeconds(formatTime(now));
-          const reservedSeconds = timeToSeconds(convertRTime(reservedTime));
-          // console.log(currentSeconds, reservedSeconds);
-          if (currentSeconds >= reservedSeconds) {
-            automaticCancel();
-          }
-          return { shouldRepeat: false }; // Prevents the timer from repeating
-        }}
+        colors={["#355E3B", "#D6D6CA"]} // Define your gradient colors here
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 0.35 }}
+        style={styles.container}
       >
-        {() => (
-          <>
-            <View style={{ gap: 5 }}>
-              <View style={{ alignItems: 'center' }}>
-                <Text style={styles.default}>Reserved Time</Text>
-                <Text style={styles.currentTimeText}>{reservedTime}</Text>
-              </View>
-              <HorizontalLine style={{ width: RDim.width * .5 }} />
-              <View style={{ alignItems: 'center' }}>
-                <Text style={styles.currentTimeText}>{hoursLate}</Text>
-                <Text style={styles.default}>Hours Late</Text>
-              </View>
-            </View>
-          </>
-        )}
-      </CountdownCircleTimer>
-      <View style={{ marginTop: 30, height: RDim.height * .05 }}>
-        <View style={{ alignItems: 'center' }}>
-          <Text style={{ fontFamily: 'mplusb', fontSize: RDim.width * .05 }}>You can be late only for 1 hour</Text>
-          <Text style={{ fontFamily: 'mplusb', fontSize: RDim.width * .025, color: '#AB0505' }}>(your reservation will be automatically canceled after 1 hour)</Text>
-        </View>
-      </View>
-      <View>
-        <View style={styles.bcard}>
-          {
-            reservedBike.map((bike) => {
-              return (
-                <View key={bike.bike_id} style={styles.bcardCon}>
-                  <Image source={{ uri: bike.bike_image_url }} style={styles.bimage} />
-                  <View style={styles.btextContainer}>
-                    <Text style={styles.bdate}>Reservation No.: {bike.reservation_number}</Text>
-                    <Text style={styles.bname}>bike id: {bike.bike_id}</Text>
-                    <Text style={styles.bcontact}>Duration: {bike.duration} Hr/s</Text>
-                  </View>
+        <ToastManager
+          position="top"
+          width={'auto'}
+          textStyle={{ fontSize: 12, paddingHorizontal: 10 }}
+          duration={2000}
+          showCloseIcon={false}
+          showProgressBar={false}
+        />
+        <Text style={styles.title}>Reservation Time</Text>
+        <CountdownCircleTimer
+          size={RDim.scale * 100}
+          trailColor='whitesmoke'
+          // isGrowing={true}
+          isPlaying
+          duration={duration} // Set the duration in seconds
+          colors={['#355E3B']} // Colors for the timer
+          onComplete={() => {
+            // // Action to take when the timer completes
+            // const now = new Date();
+            // const currentSeconds = timeToSeconds(formatTime(now));
+            // const reservedSeconds = timeToSeconds(convertRTime(reservedTime));
+            // // console.log(currentSeconds, reservedSeconds);
+            // if (currentSeconds >= reservedSeconds) {
+            //   automaticCancel();
+            // }
+            return { shouldRepeat: false }; // Prevents the timer from repeating
+          }}
+        >
+          {() => (
+            <>
+              <View style={{ gap: 5 }}>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.default}>Reserved Time</Text>
+                  <Text style={styles.currentTimeText}>{reservedTime}</Text>
                 </View>
-              )
-            })
-          }
-        </View>
-      </View>
-      <View style={btnCon.container}>
-        <TouchableOpacity onPress={handleCancelReserve}>
-          <View style={[btnCon.btn, { backgroundColor: '#AB0505' }]}>
-            <Text style={btnCon.text}>Cancel Reservation</Text>
+                <HorizontalLine style={{ width: RDim.width * .5 }} />
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.currentTimeText}>{hoursLate}</Text>
+                  <Text style={styles.default}>Hours Late</Text>
+                </View>
+              </View>
+            </>
+          )}
+        </CountdownCircleTimer>
+        <View style={{ marginTop: 30, height: RDim.height * .05 }}>
+          <View style={{ alignItems: 'center' }}>
+            <Text style={{ fontFamily: 'mplusb', fontSize: RDim.width * .05 }}>You can be late only for 1 hour</Text>
+            <Text style={{ fontFamily: 'mplusb', fontSize: RDim.width * .025, color: '#AB0505' }}>(your reservation will be automatically canceled after 1 hour)</Text>
           </View>
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
+        </View>
+        <View>
+          <View style={styles.bcard}>
+            {
+              reservedBike.map((bike) => {
+                return (
+                  <View key={bike.bike_id} style={styles.bcardCon}>
+                    <Image source={{ uri: bike.bike_image_url }} style={styles.bimage} />
+                    <View style={styles.btextContainer}>
+                      <Text style={styles.bdate}>Reservation No.: {bike.reservation_number}</Text>
+                      <Text style={styles.bname}>bike id: {bike.bike_id}</Text>
+                      <Text style={styles.bcontact}>Duration: {bike.duration} Hr/s</Text>
+                    </View>
+                  </View>
+                )
+              })
+            }
+          </View>
+        </View>
+        <View style={btnCon.container}>
+          <TouchableOpacity onPress={handleCancelReserve}>
+            <View style={[btnCon.btn, { backgroundColor: '#AB0505' }]}>
+              <Text style={btnCon.text}>Cancel Reservation</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </LinearGradient>
     )
   )
 }

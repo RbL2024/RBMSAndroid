@@ -20,9 +20,13 @@
         "foregroundImage": "./assets/images/RBMSlogo.png",
         "backgroundColor": "#D6D6CA"
       },
-      "permissions": ["NOTIFICATIONS","BLUETOOTH", "BLUETOOTH_ADMIN"],
-      "package": "com.rb2024.rbmsa",
-      "versionCode": 1
+      "permissions": [
+        "NOTIFICATIONS",
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "FOREGROUND_SERVICE"
+      ],
+      "package": "com.rb2024.rbmsa"
     },
     "web": {
       "bundler": "metro",
@@ -45,6 +49,7 @@
       "color": "#000000",
       "androidMode": "default",
       "androidCollapsedTitle": "View message"
-    }
+    },
+    "owner": "rb2024"
   }
 }

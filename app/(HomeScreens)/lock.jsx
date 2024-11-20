@@ -4,18 +4,111 @@ import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import * as IntentLauncher from 'expo-intent-launcher';
+import * as Network from 'expo-network';
+import ToastManager, { Toast } from 'toastify-react-native';
+import axios from 'axios';
+import { getRentedBikeReserve, updateLockstate, updateAlarmstate } from '@/hooks/myAPI';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 export default function Lock() {
+  const [isWifiConnected, setIsWifiConnected] = useState(false);
   const [isBluetoothConnected, setIsBluetoothConnected] = useState(false);  // Default off
-  const [isSmartLockDisabled, setIsSmartLockDisabled] = useState(false);     // Default off
+  const [isSmartLockDisabled, setIsSmartLockDisabled] = useState();     // Default off
   const [isAlarmDisabled, setIsAlarmDisabled] = useState(false);             // Default off
   const [modalVisible, setModalVisible] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
   const [currentToggle, setCurrentToggle] = useState(null); // Track which toggle is being confirmed
   const [isAlarmTriggered, setIsAlarmTriggered] = useState(false);
 
+  const enableESPlock = async (state) => {
+    try {
+      const bID = await AsyncStorage.getItem('bike_id');
+      const email = await AsyncStorage.getItem('email');
+      if (bID && email) {
+        const data = { bike_id: bID, email: email, lockState: state };
+        const response = await axios.post('http://192.168.1.184/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: JSON.stringify(data), // Send data as a URL-encoded string
+        });
+      }
+    } catch (error) {
+      console.error('Error sending data:', error);
+    }
+  }
 
+  useEffect(() => {
+    const initials = async () => {
+      try {
+        const bID = await AsyncStorage.getItem('bike_id');
+        const email = await AsyncStorage.getItem('email');
+        if (bID && email) {
+          const data = { bID: bID, email: email };
+          const getRBR = await axios.get(`${getRentedBikeReserve}/${data.email}/${data.bID}`);
+          const lState = getRBR.data.records[0].lockState
+          const aState = getRBR.data.records[0].alarmState
+          setIsSmartLockDisabled(lState); //console.log(lState);
+          setIsAlarmDisabled(aState); //console.log(aState);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    initials();
+  }, [])
+
+  const updateLockState = async (state) => {
+    try {
+      const bID = await AsyncStorage.getItem('bike_id');
+      const email = await AsyncStorage.getItem('email');
+      if (bID && email) {
+        const data = { bike_id: bID, email: email, lockState: state };
+        // console.log(data)
+        const updateLS = await axios.put(updateLockstate, data)
+        // console.log(updateLS.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  const updateAlarmState = async (state) => {
+    try {
+      const bID = await AsyncStorage.getItem('bike_id');
+      const email = await AsyncStorage.getItem('email');
+      if (bID && email) {
+        const data = { bike_id: bID, email: email, alarmState: state };
+        // console.log(data)
+        const updateLS = await axios.put(updateAlarmstate, data)
+        // console.log(updateLS.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
+  const isConnectedToWifi = async () => {
+    const networkState = await Network.getNetworkStateAsync();
+    return networkState.isConnected && networkState.type === Network.NetworkStateType.WIFI;
+  };
+
+  const openWifiSettings = async () => {
+    try {
+      const connected = await isConnectedToWifi();
+      if (connected) {
+        Toast.info('Please connect to \"RBMS\" Wi-Fi network.');
+      } else {
+        Toast.info('Please connect to \"RBMS" Wi-Fi network.');
+      }
+      await IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.WIFI_SETTINGS);
+    } catch (error) {
+      console.error("Error opening Wi-Fi settings: ", error);
+    }
+  };
   // Handle Bluetooth toggle
   const handleBluetoothToggle = (value) => {
     if (!value) {
@@ -34,6 +127,8 @@ export default function Lock() {
       setCurrentToggle('smartLock');
       setModalVisible(true);
     } else {
+      enableESPlock(true)
+      updateLockState(true);
       setIsSmartLockDisabled(true);
     }
   };
@@ -45,6 +140,7 @@ export default function Lock() {
       setCurrentToggle('alarm');
       setModalVisible(true);
     } else {
+      updateAlarmState(true)
       setIsAlarmDisabled(true);
     }
   };
@@ -57,9 +153,12 @@ export default function Lock() {
       setIsSmartLockDisabled(false);
       setIsAlarmDisabled(false);
     } else if (currentToggle === 'alarm') {
+      updateAlarmState(false)
       setIsAlarmDisabled(false);
     } else if (currentToggle === 'smartLock') {
       // If confirmed, disable smart lock
+      enableESPlock(false)
+      updateLockState(false);
       setIsSmartLockDisabled(false);
     }
     setCurrentToggle(null);
@@ -70,12 +169,12 @@ export default function Lock() {
     setModalVisible(false);
     if (currentToggle === 'smartLock') {
       // If canceled, re-enable smart lock
-      setIsSmartLockDisabled(true);
+      setIsSmartLockDisabled('UNLOCK');
     }
     setCurrentToggle(null); // Reset the toggle
   };
 
-  
+
 
   // Automatically turn on the smart lock after 10 seconds if Bluetooth is connected and smart lock is off
   useEffect(() => {
@@ -96,8 +195,28 @@ export default function Lock() {
       end={{ x: 0, y: 0.35 }}
       style={styles.container}
     >
+      <ToastManager
+        position="top"
+        textStyle={{ fontSize: 12, paddingHorizontal: 10 }}
+        duration={2000}
+        showCloseIcon={false}
+        showProgressBar={false}
+      />
+      <TouchableOpacity onPress={openWifiSettings}>
+        <View style={[styles.optionContainer, !isWifiConnected && styles.disabledOption]}>
+          {/* <MaterialCommunityIcons
+            name={isWifiConnected ? "wifi" : "wifi-off"}
+            size={30}
+            color={isWifiConnected ? "#4CAF50" : "#F44336"}
+            style={styles.icon}
+          /> */}
+          <Text style={[styles.optionText, { textAlign: 'center' }]}>
+            {"Click and Find RBMS Wifi then Connect"}
+          </Text>
+        </View>
+      </TouchableOpacity>
       {/* Bluetooth Toggle */}
-      <View style={[styles.optionContainer, !isBluetoothConnected && styles.disabledOption]}>
+      {/* <View style={[styles.optionContainer, !isBluetoothConnected && styles.disabledOption]}>
         <MaterialCommunityIcons
           name={isBluetoothConnected ? "bluetooth-connect" : "bluetooth-off"}
           size={30}
@@ -113,7 +232,7 @@ export default function Lock() {
           trackColor={{ false: "#767577", true: "#4CAF50" }}
           thumbColor={isBluetoothConnected ? "#FFFFFF" : "#FFFFFF"}
         />
-      </View>
+      </View> */}
 
       {/* Smart Lock Toggle */}
       <View style={[styles.optionContainer, !isSmartLockDisabled && styles.disabledOption]}>
@@ -131,7 +250,7 @@ export default function Lock() {
           onValueChange={handleSmartLockToggle}
           trackColor={{ false: "#767577", true: "#4CAF50" }}
           thumbColor={isSmartLockDisabled ? "#FFFFFF" : "#FFFFFF"}
-          disabled={!isBluetoothConnected}
+        // disabled={!isBluetoothConnected}
         />
       </View>
 
@@ -151,7 +270,7 @@ export default function Lock() {
           onValueChange={handleAlarmToggle}
           trackColor={{ false: "#767577", true: "#4CAF50" }}
           thumbColor={isAlarmDisabled ? "#FFFFFF" : "#FFFFFF"}
-          disabled={!isBluetoothConnected}
+        // disabled={!isBluetoothConnected}
         />
       </View>
 
