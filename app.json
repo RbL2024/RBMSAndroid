@@ -10,7 +10,7 @@
     "splash": {
       "image": "./assets/images/RBMSlogo.png",
       "resizeMode": "contain",
-      "backgroundColor": "##355E3B"
+      "backgroundColor": "#355E3B"
     },
     "ios": {
       "supportsTablet": true
@@ -20,12 +20,6 @@
         "foregroundImage": "./assets/images/RBMSlogo.png",
         "backgroundColor": "#D6D6CA"
       },
-      "permissions": [
-        "NOTIFICATIONS",
-        "BLUETOOTH",
-        "BLUETOOTH_ADMIN",
-        "FOREGROUND_SERVICE"
-      ],
       "package": "com.rb2024.rbmsa"
     },
     "web": {
@@ -40,8 +34,11 @@
       "typedRoutes": true
     },
     "extra": {
+      "router": {
+        "origin": false
+      },
       "eas": {
-        "projectId": "31cf7fdc-2e7a-4df3-b5e4-20c139774355"
+        "projectId": "e882989c-c2f2-442e-a790-c16d54b1b310"
       }
     },
     "notification": {

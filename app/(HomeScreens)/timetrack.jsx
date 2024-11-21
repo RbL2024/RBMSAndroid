@@ -283,7 +283,10 @@ export default function Timetrack() {
 
   const updateReservationStatusToCancel = async () => {
     try {
-      const response = await axios.put(cancelReservation, bikeIdEmail);
+      const bID = await AsyncStorage.getItem('bike_id');
+      const email = await AsyncStorage.getItem('email');
+      const data = {bID:bID, email:email};
+      const response = await axios.put(cancelReservation, data);
       console.log(response.data);
     } catch (error) {
       console.error('Error updating reservation status:', error.response ? error.response.data : error.message);

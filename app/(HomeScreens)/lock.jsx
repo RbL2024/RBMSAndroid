@@ -22,6 +22,7 @@ export default function Lock() {
   const [currentToggle, setCurrentToggle] = useState(null); // Track which toggle is being confirmed
   const [isAlarmTriggered, setIsAlarmTriggered] = useState(false);
 
+
   const enableESPlock = async (state) => {
     try {
       const bID = await AsyncStorage.getItem('bike_id');
@@ -40,7 +41,7 @@ export default function Lock() {
       console.error('Error sending data:', error);
     }
   }
-
+  
   useEffect(() => {
     const initials = async () => {
       try {

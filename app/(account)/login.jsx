@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
 import ToastManager, { Toast } from 'toastify-react-native';
 import React, { useState } from 'react';
 import { Link } from 'expo-router';
@@ -35,7 +35,7 @@ const storeBikeId = async (bikeId) => {
     try {
         await AsyncStorage.setItem('bike_id', bikeId);
     } catch (error) {
-        console.error('Error storing bike ID:', error);
+        // Alert.alert('Welcome!', 'Good Day!, Happy renting with RBMS');
     }
 };
 
