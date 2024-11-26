@@ -51,6 +51,7 @@ export const checkBStat = `${apiServer}/rbmsa/checkBStat`;
 export const getRentedBike = `${apiServer}/rbmsa/getRentedBike`;
 export const getResBikeAll = `${apiServer}/rbmsa/getAllUser-Reservations`;
 export const cancelReservation = `${apiServer}/rbmsa/cancelReservation`;
+export const createTransaction = `${apiServer}/rbmsa/create-transaction`;
 
 export const getRentedBikeReserve = `${apiServer}/esp32/getRentedBikeReserve`;
 export const updateLockstate = `${apiServer}/esp32/updateLockState`;

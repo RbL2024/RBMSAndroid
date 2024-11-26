@@ -11,8 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { reserveAPI } from '@/hooks/myAPI';
-import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
+
+const paymongoAPIKey = 'sk_test_fF7R1xobnLU9j2dgjkM6sUyp';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -40,6 +40,8 @@ const getData = async () => {
         console.error('Failed to fetch data', e);
     }
 };
+
+
 
 const Reserve = () => {
     const formatTime = (date) => {
@@ -128,9 +130,8 @@ const Reserve = () => {
     const [bikePrice, setBikePrice] = useState(bike_rent_price);
     const [durationFee, setDurationFee] = useState(Math.floor(bike_rent_price));
 
-    const reservationFee = 25; // Example fixed reservation fee
-    const reserveHourFee = 25; // Example fixed reserve hour fee
-    const totalFee = reservationFee + reserveHourFee;
+
+    const totalFee = 50;
     const totalBikeFee = bikePrice * dou;
 
     const updateDurationFee = (duration) => {
@@ -169,15 +170,96 @@ const Reserve = () => {
 
     const [loading, setLoading] = useState(false);
 
+    const [paymentMethodID, setPaymentMethodID] = useState();
+    const [paymentIntentID, setPaymentIntentID] = useState();
+    const [paymentClientKey, setPaymentClientKey] = useState();
+
+
+    const paymentCreateIntent = async (amount) => {
+        try {
+
+            // Create a payment intent
+            const paymentIntentResponse = await axios.post('https://api.paymongo.com/v1/payment_intents', {
+                data: {
+                    attributes: {
+                        amount: amount * 100,
+                        payment_method_allowed: ['gcash'],
+                        payment_method_options: { card: { request_three_d_secure: 'any' } },
+                        currency: 'PHP',
+                        capture_type: 'automatic',
+                        description: 'reservation fee'
+                    }
+                }
+            }, {
+                headers: {
+                    Authorization: `Basic ${btoa(paymongoAPIKey + ':')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+
+            // Create a payment method
+            const paymentMethodResponse = await axios.post('https://api.paymongo.com/v1/payment_methods', {
+                data: {
+                    attributes: {
+                        type: 'gcash'
+                    }
+                }
+            }, {
+                headers: {
+                    Authorization: `Basic ${btoa(paymongoAPIKey + ':')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+    
+            const paymentMethodID = paymentMethodResponse.data.data.id;
+    
+            
+    
+            const paymentIntentID = paymentIntentResponse.data.data.id;
+            const paymentClientKey = paymentIntentResponse.data.data.client_key;
+    
+            // Attach the payment method to the payment intent
+            const attachResponse = await axios.post(`https://api.paymongo.com/v1/payment_intents/${paymentIntentID}/attach`, {
+                data: {
+                    attributes: {
+                        payment_method: paymentMethodID,
+                        client_key: paymentClientKey,
+                        return_url: 'https://rbl2024.github.io/RBMSWeb/'
+                    }
+                }
+            }, {
+                headers: {
+                    Authorization: `Basic ${btoa(paymongoAPIKey + ':')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            const paymentIntentData = attachResponse.data.data;
+            // console.log('Payment method attached successfully:', attachResponse.data.data.attributes.next_action.redirect.url);
+            
+            // Check for redirect URL
+            if (paymentIntentData.attributes.next_action && paymentIntentData.attributes.next_action.type === 'redirect') {
+                const redirectUrl = paymentIntentData.attributes.next_action.redirect.url;
+                console.log('Redirect URL:', redirectUrl);
+                return { success: true, redirectUrl }; // Return success and redirect URL
+            } 
+    
+        } catch (error) {
+            console.error('Error during payment process:', error);
+            return { success: false, message: 'Error during payment process.' }; // Return failure
+        }
+    };
+
+
     const handleReserve = async () => {
-        if(disable){
+        if (disable) {
             Alert.alert('Information', 'We cannot reserve time below 30 mins');
             return;
         }
-        Alert.alert('Information', `You will only be charged for ${totalFee} pesos for reservation.`);
-        setLoading(true);
-        const userData = await getData();
 
+        // Prepare payment details
+        const amount = totalFee; // Total amount to be charged
+        const userData = await getData();
         const reserveData = {
             uID: _id,
             bike_id: bike_id,
@@ -187,24 +269,71 @@ const Reserve = () => {
             totalBikeRentPrice: totalBikeFee.toString(),
             bike_status: "RESERVED",
             ...userData
-        }
-
+        };
         try {
-            const response = await axios.put(`${reserveAPI}/${_id}`, reserveData);
-            if (response.data.isReserved) {
-                Toast.success(response.data.message + ', check your Time Tracker');
-                const bID = bike_id;
-                storeBikeId(bID);
-                await delay(2000);
-                nav.navigate('index');
+
+            // Request payment creation
+            const paymentResult = await paymentCreateIntent(amount);
+
+            // Check payment response
+            if (paymentResult.success) {
+                Alert.alert('Payment Success', 'You will only be charged for ' + totalFee + ' pesos for reservation.');
+                // Proceed with reservation logic
+                setLoading(true);
+
+
+                const reserveResponse = await axios.put(`${reserveAPI}/${_id}`, reserveData);
+                if (reserveResponse.data.isReserved) {
+                    Toast.success(reserveResponse.data.message + ', check your Time Tracker');
+                    const bID = bike_id;
+                    storeBikeId(bID);
+                    await delay(2000);
+                    nav.navigate('index');
+                } else {
+                    Toast.error(reserveResponse.data.message);
+                }
             } else {
-                Toast.error(response.data.message);
+                Toast.error('Payment failed. Please try again.');
             }
         } catch (error) {
             console.error(error);
+            Toast.error('An error occurred while processing payment.');
         } finally {
             setLoading(false);
         }
+
+
+        // Alert.alert('Information', `You will only be charged for ${totalFee} pesos for reservation.`);
+        // setLoading(true);
+        // const userData = await getData();
+
+        // const reserveData = {
+        //     uID: _id,
+        //     bike_id: bike_id,
+        //     timeofuse: selectedTime,
+        //     duration: dou.toString(),
+        //     totalReservationFee: totalFee.toString(),
+        //     totalBikeRentPrice: totalBikeFee.toString(),
+        //     bike_status: "RESERVED",
+        //     ...userData
+        // }
+
+        // try {
+        //     const response = await axios.put(`${reserveAPI}/${_id}`, reserveData);
+        //     if (response.data.isReserved) {
+        //         Toast.success(response.data.message + ', check your Time Tracker');
+        //         const bID = bike_id;
+        //         storeBikeId(bID);
+        //         await delay(2000);
+        //         nav.navigate('index');
+        //     } else {
+        //         Toast.error(response.data.message);
+        //     }
+        // } catch (error) {
+        //     console.error(error);
+        // } finally {
+        //     setLoading(false);
+        // }
     }
 
     const [gotuser, setGotuser] = useState({});
@@ -223,8 +352,8 @@ const Reserve = () => {
         <View style={{ flex: 1 }}>
             <ToastManager
                 position="top"
-                style={{minWidth: RDim.width*.9}}
-                textStyle={{fontSize:12}}
+                style={{ minWidth: RDim.width * .9 }}
+                textStyle={{ fontSize: 12 }}
                 showCloseIcon={false}
                 showProgressBar={false}
             />
@@ -334,7 +463,7 @@ const Reserve = () => {
                         <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>Reservation Fee:</Text>
                         <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>&#8369;{totalFee}</Text>
                     </View>
-                    <HorizontalLine/>
+                    <HorizontalLine />
                     <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
                         <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>Total Bike Rent Price:</Text>
                         <Text style={{ fontSize: RDim.width * 0.055, fontFamily: 'mplus' }}>&#8369;{totalBikeFee}</Text>
