@@ -11,6 +11,8 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { reserveAPI } from '@/hooks/myAPI';
+import { WebView } from 'react-native-webview';
+
 
 const paymongoAPIKey = 'sk_test_fF7R1xobnLU9j2dgjkM6sUyp';
 
@@ -55,6 +57,8 @@ const Reserve = () => {
     const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
     const [selectedTime, setSelectedTime] = useState(formatTime(new Date()));
     const [disable, setDisable] = useState(true);
+    const [webViewVisible, setWebViewVisible] = useState(false);
+    const [webViewUrl, setWebViewUrl] = useState('');
 
     const showTimePicker = () => {
         setDatePickerVisibility(true);
@@ -211,14 +215,14 @@ const Reserve = () => {
                     'Content-Type': 'application/json'
                 }
             });
-    
+
             const paymentMethodID = paymentMethodResponse.data.data.id;
-    
-            
-    
+
+
+
             const paymentIntentID = paymentIntentResponse.data.data.id;
             const paymentClientKey = paymentIntentResponse.data.data.client_key;
-    
+
             // Attach the payment method to the payment intent
             const attachResponse = await axios.post(`https://api.paymongo.com/v1/payment_intents/${paymentIntentID}/attach`, {
                 data: {
@@ -236,14 +240,14 @@ const Reserve = () => {
             });
             const paymentIntentData = attachResponse.data.data;
             // console.log('Payment method attached successfully:', attachResponse.data.data.attributes.next_action.redirect.url);
-            
+
             // Check for redirect URL
             if (paymentIntentData.attributes.next_action && paymentIntentData.attributes.next_action.type === 'redirect') {
                 const redirectUrl = paymentIntentData.attributes.next_action.redirect.url;
                 console.log('Redirect URL:', redirectUrl);
                 return { success: true, redirectUrl }; // Return success and redirect URL
-            } 
-    
+            }
+
         } catch (error) {
             console.error('Error during payment process:', error);
             return { success: false, message: 'Error during payment process.' }; // Return failure
@@ -252,10 +256,14 @@ const Reserve = () => {
 
 
     const handleReserve = async () => {
+
+
         if (disable) {
             Alert.alert('Information', 'We cannot reserve time below 30 mins');
             return;
         }
+
+
 
         // Prepare payment details
         const amount = totalFee; // Total amount to be charged
@@ -274,7 +282,7 @@ const Reserve = () => {
 
             // Request payment creation
             const paymentResult = await paymentCreateIntent(amount);
-
+            console.log(paymentResult);
             // Check payment response
             if (paymentResult.success) {
                 Alert.alert('Payment Success', 'You will only be charged for ' + totalFee + ' pesos for reservation.');
