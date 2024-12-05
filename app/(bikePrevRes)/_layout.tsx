@@ -21,6 +21,16 @@ export default function Layout() {
           },
         }}
       />
+      <Stack.Screen
+        name="paymentwebview"
+        options={{
+          title: "Payment",
+          headerStyle: {
+            backgroundColor: '#355E3B'
+          },
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
