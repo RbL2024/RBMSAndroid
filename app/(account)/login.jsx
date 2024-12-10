@@ -146,7 +146,7 @@ export default function Login() {
                 </View>
             </View>
             <View style={styles.aha}>
-                <Link href={{ pathname: '/login' }}>
+                <Link href={{ pathname: '/forgetpass' }}>
                     <Text style={{ fontFamily: 'mplusb', fontSize: RDim.width * 0.04 }}>forgot password</Text>
                 </Link>
             </View>

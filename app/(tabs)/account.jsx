@@ -69,6 +69,11 @@ const Account = () => {
       // console.log(userInfo);
     }, [])
   );
+  const navigation = useNavigation();
+
+  const handleReset = () => {
+    navigation.navigate('resetpass'); 
+};
 
   const handleLogout = async () => {
     setLoading(true);
@@ -121,9 +126,9 @@ const Account = () => {
                   <Text style={styles.default}>Reset Password</Text>
                 </View>
                 <View style={{ paddingRight: 10 }}>
-                  <TouchableOpacity>
-                    <View style={{ backgroundColor: '#099654', width: RDim.width * 0.08, alignItems: 'center' }}>
-                      <Text style={{ color: 'white' }}>SET</Text>
+                  <TouchableOpacity onPress={handleReset}>
+                    <View style={{ backgroundColor: '#AB0505', width: RDim.width * 0.15, alignItems: 'center' }}>
+                      <Text style={{ color: 'white' }}>RESET</Text>
                     </View>
                   </TouchableOpacity>
                 </View>

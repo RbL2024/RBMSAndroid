@@ -1,7 +1,7 @@
 import React from "react";
 import axios from "axios";
 
-const localAPI = 'http://192.168.1.14:8917';
+const localAPI = 'http://192.168.1.5:8917';
 const cloudAPI = 'https://rbms-backend-g216.onrender.com';
 const apiServer = localAPI; // Change this to localAPI for local testing
 

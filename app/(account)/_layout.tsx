@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 
+
 export default function Layout() {
   return (
     <Stack
@@ -24,6 +25,39 @@ export default function Layout() {
             
         }}
       />
+      <Stack.Screen
+        name="forgetpass"
+        options={{
+            title: "",
+            headerTransparent: true,
+            
+        }}
+      />
+      <Stack.Screen
+        name="fpverification"
+        options={{
+            title: "",
+            headerTransparent: true,
+            
+        }}
+      />
+      <Stack.Screen
+        name="newpass"
+        options={{
+            title: "",
+            headerTransparent: true,
+            
+        }}
+      />
+       <Stack.Screen
+        name="resetpass"
+        options={{
+            title: "",
+            headerTransparent: true,
+            
+        }}
+      />
     </Stack>
+    
   );
 }
