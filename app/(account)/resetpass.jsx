@@ -18,7 +18,7 @@ const newpass = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>New Password</Text>
+      <Text style={styles.title}>Reset Password</Text>
 
       <Text style={styles.notification}>
             Please enter your current password and new password to change your password.
