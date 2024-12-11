@@ -4,6 +4,7 @@ import { WebView } from 'react-native-webview';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import ToastManager, { Toast } from 'toastify-react-native';
 import { reserveAPI } from '@/hooks/myAPI';
 const paymongoAPIKey = 'sk_test_cVbUZPGVg1aCUGkGVtu5iuqs';
 
@@ -30,7 +31,7 @@ const getData = async () => {
 const PaymentWebView = () => {
     const route = useRoute();
     const navigation = useNavigation();
-    const { paymentLink, paymentLinkID } = route.params; // Get the payment link from route params
+    const { paymentLink, paymentLinkID, uID, bike_id, selectedTime, dou, totalFee, totalBikeFee } = route.params; // Get the payment link from route params
     const webViewRef = useRef(null); // Create a ref for the WebView
 
     const archivePMLink = async () => {
@@ -72,7 +73,7 @@ const PaymentWebView = () => {
         const userData = await getData();
 
         const reserveData = {
-            uID: _id,
+            uID: uID,
             bike_id: bike_id,
             timeofuse: selectedTime,
             duration: dou.toString(),
@@ -82,7 +83,7 @@ const PaymentWebView = () => {
             ...userData
         }
         try {
-            const reserveResponse = await axios.put(`${reserveAPI}/${_id}`, reserveData);
+            const reserveResponse = await axios.put(`${reserveAPI}/${uID}`, reserveData);
             if (reserveResponse.data.isReserved) {
                 Toast.success(reserveResponse.data.message + ', check your Time Tracker');
                 const bID = bike_id;
@@ -106,7 +107,13 @@ const PaymentWebView = () => {
 
     return (
         <View style={{ flex: 1 }}>
-            
+             <ToastManager
+                position="top"
+                style={{ minWidth: RDim.width * .9 }}
+                textStyle={{ fontSize: 12 }}
+                showCloseIcon={false}
+                showProgressBar={false}
+            />
             <WebView
                 ref={webViewRef}
                 source={{ uri: paymentLink }}

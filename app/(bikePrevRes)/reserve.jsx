@@ -233,7 +233,7 @@ const Reserve = () => {
                         try {
                             // Request payment creation
                             const paymentLink = await createPaymentLink(amount);
-                            nav.navigate('paymentwebview', { paymentLink: paymentLink.paymentLinkUrl, paymentLinkID: paymentLink.paymentLinkID });
+                            nav.navigate('paymentwebview', { paymentLink: paymentLink.paymentLinkUrl, paymentLinkID: paymentLink.paymentLinkID, uID: _id, bike_id: bike_id, selectedTime: selectedTime, dou: dou, totalFee: totalFee, totalBikeFee: totalBikeFee });
                         } catch (error) {
                             console.error(error);
                             Toast.error('An error occurred while processing payment.');
