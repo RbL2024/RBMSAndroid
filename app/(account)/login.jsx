@@ -81,7 +81,7 @@ export default function Login() {
 
                 await delay(2000);
                 clearInputs();
-                nav.navigate('account');
+                nav.navigate('index');
             } else {
                 Toast.error(message);
             }

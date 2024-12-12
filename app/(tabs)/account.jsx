@@ -69,10 +69,9 @@ const Account = () => {
       // console.log(userInfo);
     }, [])
   );
-  const navigation = useNavigation();
 
   const handleReset = () => {
-    navigation.navigate('resetpass'); 
+    nav.navigate('resetpass'); 
 };
 
   const handleLogout = async () => {

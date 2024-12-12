@@ -7,7 +7,10 @@ import axios from 'axios';
 import ToastManager, { Toast } from 'toastify-react-native';
 import { reserveAPI } from '@/hooks/myAPI';
 const paymongoAPIKey = 'sk_test_cVbUZPGVg1aCUGkGVtu5iuqs';
+import RDim from '../../hooks/useDimensions'
 
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const getData = async () => {
     try {
         const id = await AsyncStorage.getItem('id');
@@ -25,6 +28,14 @@ const getData = async () => {
         }
     } catch (e) {
         console.error('Failed to fetch data', e);
+    }
+};
+
+const storeBikeId = async (bID) => {
+    try {
+        await AsyncStorage.setItem('bike_id', bID);
+    } catch (e) {
+        console.error('Failed to save data', e);
     }
 };
 
@@ -89,7 +100,7 @@ const PaymentWebView = () => {
                 const bID = bike_id;
                 storeBikeId(bID);
                 await delay(2000);
-                nav.navigate('index');
+                navigation.navigate('index');
             } else {
                 Toast.error(reserveResponse.data.message);
             }
@@ -99,9 +110,18 @@ const PaymentWebView = () => {
     }
 
     const handleCancel = () => {
-        Alert.alert('Payment Cancelled', 'You have cancelled the payment process.');
-        archivePMLink();
-        navigation.goBack(); // Navigate back after cancellation
+        Alert.alert(
+            'Cancel Payment',
+            'Are you sure you want to cancel the payment?',
+            [
+              { text: 'Yes', onPress: () => {
+                archivePMLink();
+                navigation.goBack();
+              } },
+              { text: 'No', onPress: () => console.log('Cancel payment cancelled') },
+            ],
+            { cancelable: false }
+          );
     };
 
 
