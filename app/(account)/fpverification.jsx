@@ -1,15 +1,30 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, {useState} from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import RDim from '@/hooks/useDimensions';
 const ForgotPasswordScreen = () => {
     const navigation = useNavigation();
+    const route = useRoute();
+    const {email, code} = route.params;
+    const userEmail = email;
+    const [inputCode, setInputCode] = useState('')
 
     const handlePress = () => {
-        navigation.navigate('newpass'); // Replace 'ForgetPass' with your screen name in the navigation setup
-    };
+      // if(inputCode===''){
+      //   Alert.alert('Error!','Please enter your code');
+      //   return
+      // }
+      // if(inputCode !== code){
+      //   Alert.alert('Error!','Invalid code');
+      //   return
+      // }
+      
+        navigation.navigate('newpass', {email:email}); // Replace 'ForgetPass' with your screen name in the navigation setup
+        
+      };
 
-     const userEmail = "na***17@gmail.com"; // Replace with dynamic email if available
+      // Replace with dynamic email if available
 
   return (
     <KeyboardAvoidingView
@@ -21,7 +36,7 @@ const ForgotPasswordScreen = () => {
       <Text style={styles.title}>Verify your email</Text>
 
       <Text style={styles.notification}>
-            A verification code has been sent to <Text style={styles.email}>{userEmail}</Text>. 
+            A verification code has been sent to <Text ellipsizeMode='middle' numberOfLines={0} style={styles.email}>{userEmail}</Text>. 
             Please check your email to verify your account.
       </Text>
       
@@ -34,14 +49,10 @@ const ForgotPasswordScreen = () => {
            style={styles.input}
             placeholder="Enter your verification code"
             placeholderTextColor="#9e9e9e"
-            keyboardType="numeric" // Ensures only numbers are shown on the keyboard
+            keyboardType="default" // Ensures only numbers are shown on the keyboard
             maxLength={6} // Limits input to 6 digits
-            onChangeText={(text) => {
-            // Optional: Allow only numbers
-            if (!/^\d*$/.test(text)) {
-                return; // Prevent invalid input
-            }
-            }}
+            value={inputCode}
+            onChangeText={setInputCode}
         />
         </View>
 

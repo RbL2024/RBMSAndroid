@@ -75,6 +75,17 @@ export default function TabLayout() {
           headerShown: false
         }}
       />
+      <Tabs.Screen
+        name="(resetpass)"
+        options={{
+          title: "Reset Password",
+          headerShown: false,
+          href: null,
+          tabBarStyle: {
+            display: 'none'
+          }
+        }}
+      />
     </Tabs>
   );
 }

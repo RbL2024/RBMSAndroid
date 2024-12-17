@@ -19,27 +19,9 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { LinearGradient } from "expo-linear-gradient";
 import RDim from "@/hooks/useDimensions";
 import { ThemedText } from "@/components/ThemedText";
-import useAPI from "../../hooks/useAPI";
 import { Toast } from "toastify-react-native";
 import { fetchTopBikes } from "@/hooks/myAPI";
 
-//BikeCard
-// const Card = ({ title, description, onPress, imageSource }) => {
-//   return (
-//     <TouchableOpacity onPress={onPress} style={styles.card}>
-//       <ImageBackground
-//         source={imageSource}
-//         style={styles.imageBackground}
-//         imageStyle={styles.image}
-//       >
-//         <View style={styles.cardContent}>
-//           <Text style={styles.title}>{title}</Text>
-//           <Text style={styles.description}>{description}</Text>
-//         </View>
-//       </ImageBackground>
-//     </TouchableOpacity>
-//   );
-// };
 
 const Card = ({ title, description, imageSource, status }) => {
   return (
@@ -66,8 +48,6 @@ const Card = ({ title, description, imageSource, status }) => {
 
 export default function Index() {
   const [searchText, setSearchText] = useState("");
-  // Create a ref for the TextInput
-  // const { topBikes, loading, error } = useAPI();
   const [topBikes, setTopBikes] = useState([]);
 
   const getBikes = async () => {
@@ -91,12 +71,6 @@ export default function Index() {
     Keyboard.dismiss();
   };
 
-  // if (loading) {
-  //   return <ActivityIndicator size="large" color="#0000ff" />;
-  // }
-
-
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <LinearGradient
@@ -105,31 +79,6 @@ export default function Index() {
         end={{ x: 0, y: 0.35 }}
         style={{ flex: 1, position: "relative" }}
       >
-        {/* <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search"
-            placeholderTextColor="#888"
-            value={searchText} // Set the value of the input
-            onChangeText={setSearchText} // Update state on text change
-          />
-          {searchText ? ( // Conditional rendering of the icon
-            <Ionicons
-              name="close"
-              size={24}
-              color="#888"
-              style={styles.searchIcon}
-              onPress={clearInput} // Clear input when "X" is pressed
-            />
-          ) : (
-            <Ionicons
-              name="search"
-              size={24}
-              color="#888"
-              style={styles.searchIcon}
-            />
-          )}
-        </View> */}
         <View style={styles.homeNav}>
           <Link href="/adults">
             <View style={styles.hnlink}>

@@ -71,7 +71,7 @@ const Account = () => {
   );
 
   const handleReset = () => {
-    nav.navigate('resetpass'); 
+    nav.navigate('(resetpass)'); 
 };
 
   const handleLogout = async () => {

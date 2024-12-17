@@ -45,7 +45,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (isConnected) {
-      Toast.success("connected now.");
+      // Toast.success("connected now.");
     }
   }, [isConnected]);
 
@@ -56,7 +56,7 @@ export default function RootLayout() {
   return (
     <View style={{ flex: 1 }}>
       <ToastManager
-        position="bottom"
+        position="top"
         style={{minWidth: RDim.width*.9}}
         textStyle={{ fontSize: 12 }}
         duration={2000}

@@ -26,23 +26,23 @@ export default function Lorreg() {
         <Image source={bikeLogo} style={styles.image} />
       </View>
       <View style={styles.btnCon}>
-        <TouchableOpacity onPress={() => handleGoogle()}>
+        <Link href={{ pathname: '/login' }}>
           <View style={styles.btns}>
-            <Image source={google} style={styles.googleImage} />
-            <Text style={styles.btnText}>Continue with Google</Text>
+            {/* <Image source={google} style={styles.googleImage} /> */}
+            <Text style={styles.btnText}>Login</Text>
           </View>
-        </TouchableOpacity>
+        </Link>
         <Link href={{ pathname: '/register' }}>
           <View style={styles.btns}>
             <Text style={styles.btnText}>Sign Up</Text>
           </View>
         </Link>
       </View>
-      <View style={styles.aha}>
+      {/* <View style={styles.aha}>
         <Link href={{ pathname: '/login' }}>
           <Text style={{ fontFamily: 'mplusb', fontSize: RDim.width * 0.04 }}>already have an account?</Text>
         </Link>
-      </View>
+      </View> */}
     </View>
   )
 }

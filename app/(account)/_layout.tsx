@@ -30,7 +30,7 @@ export default function Layout() {
         options={{
             title: "",
             headerTransparent: true,
-            
+            headerShown: false
         }}
       />
       <Stack.Screen
@@ -38,7 +38,7 @@ export default function Layout() {
         options={{
             title: "",
             headerTransparent: true,
-            
+            headerShown: false
         }}
       />
       <Stack.Screen
@@ -46,17 +46,10 @@ export default function Layout() {
         options={{
             title: "",
             headerTransparent: true,
-            
+            headerShown: false
         }}
       />
-       <Stack.Screen
-        name="resetpass"
-        options={{
-            title: "",
-            headerTransparent: true,
-            
-        }}
-      />
+       
     </Stack>
     
   );

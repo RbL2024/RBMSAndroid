@@ -193,6 +193,7 @@ export default function Register() {
         duration={2000}
         showCloseIcon={false}
         showProgressBar={false}
+        width={'auto'}
       />
       <View style={{ alignItems: 'center', marginTop: 35 }}>
         <Text style={{ fontFamily: 'mplusb', fontSize: RDim.width * 0.07 }}>Create Your Account</Text>

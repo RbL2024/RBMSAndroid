@@ -1,20 +1,44 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet,  ScrollView} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet,  ScrollView, Alert} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import RDim from '@/hooks/useDimensions';
 import { FontAwesome as FA } from '@expo/vector-icons';
+import { useRoute } from '@react-navigation/native';
+
 
 const newpass = () => {
     const navigation = useNavigation();
+    const route = useRoute();
+    const {email} = route.params;
+    console.log(email);
+
+    useEffect(() => {
+      // Disable the back button
+      const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+        // Prevent default behavior of leaving the screen
+        e.preventDefault();
+        // Optionally show a confirmation dialog
+        Alert.alert(
+          'Are you sure you want to leave this screen?',
+          'You will lose any unsaved changes.',
+          [
+            { text: "Don't leave", style: 'cancel', onPress: () => {} },
+            { text: 'Leave', style: 'destructive', onPress: () => navigation.navigate('account')},
+          ]
+        );
+      });
+  
+      return unsubscribe; // Cleanup the listener on unmount
+    }, [navigation]);
+
 
     const handlePress = () => {
         navigation.navigate('login'); // Replace 'ForgetPass' with your screen name in the navigation setup
     };
 
     const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
-    const togglePasswordVisibility = () => {
-        setShowPassword((prevState) => !prevState); // Toggle password visibility
-      };
+    const [showCPassword, setShowCPassword] = useState(false);
+    
 
   return (
     <View style={styles.container}>
@@ -39,7 +63,7 @@ const newpass = () => {
               />
               <TouchableOpacity
                 style={styles.iconContainer} // Added style to position the icon
-                onPress={togglePasswordVisibility}
+                onPress={()=>setShowPassword((prevState)=>!prevState)}
               >
                 <FA name={showPassword ? 'eye' : 'eye-slash'} size={RDim.scale * 8} color={'#355E3B'} />
               </TouchableOpacity>
@@ -52,13 +76,13 @@ const newpass = () => {
                 style={styles.input}
                 placeholder="Confirm your password"
                 placeholderTextColor="#9e9e9e"
-                secureTextEntry={!showPassword} // Toggle secureTextEntry based on showPassword state
+                secureTextEntry={!showCPassword} // Toggle secureTextEntry based on showPassword state
               />
               <TouchableOpacity
                 style={styles.iconContainer} // Added style to position the icon
-                onPress={togglePasswordVisibility}
+                onPress={()=>setShowCPassword((prevState)=>!prevState)}
               >
-                <FA name={showPassword ? 'eye' : 'eye-slash'} size={RDim.scale * 8} color={'#355E3B'} />
+                <FA name={showCPassword ? 'eye' : 'eye-slash'} size={RDim.scale * 8} color={'#355E3B'} />
               </TouchableOpacity>
             </View>
           </View>
@@ -140,10 +164,8 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     position: 'absolute',
-    right: 15, // Position the icon to the right inside the input
-    top: '50%',
-    gap: 10,
-    transform: [{ translateY: -RDim.scale * 4 }], // Center the icon vertically in the input
+    right: 0, // Position the icon to the right inside the input
+    padding: 12, // Center the icon vertically in the input
   },
   btnText: {
     fontSize: 16,
