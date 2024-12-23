@@ -5,13 +5,13 @@ const localAPI = 'http://192.168.1.15:8917';
 const cloudAPI = 'https://rbms-backend-g216.onrender.com';
 const apiServer = localAPI; // Change this to localAPI for local testing
 
+
 export const fetchTopBikes = async () => {
   try {
     const response = await axios.get(`${apiServer}/rbmsa/topBikes`); // Replace with your API endpoint
     return response.data // Assuming data is an array of bikes
   } catch (error) {
-    setError("Error fetching bikes: " + error.message);
-    throw error;
+    console.log("Error fetching bikes: " + error.message);
   }
 }
 
@@ -23,8 +23,7 @@ export const fetchAdultBikes = async () => {
     const response = await axios.post(`${apiServer}/rbmsa/typeBikes`, data);
     return response.data // Assuming data is an array of bikes
   } catch (error) {
-    setError("Error fetching bikes: " + error.message);
-    throw error;
+    console.log("Error fetching bikes: " + error.message);
   }
 };
 
@@ -36,8 +35,7 @@ export const fetchKidsBikes = async () => {
     const response = await axios.post(`${apiServer}/rbmsa/typeBikes`, data); // Replace with your API endpoint
     return response.data // Assuming data is an array of bikes
   } catch (error) {
-    setError("Error fetching bikes: " + error.message);
-    throw error;
+    console.log("Error fetching bikes: " + error.message);
   }
 }
 
