@@ -91,7 +91,7 @@ const index = () => {
     };
 
     fetchUserId();
-    console.log(userId);
+    // console.log(userId);
   }, [userId]);
 
   return (

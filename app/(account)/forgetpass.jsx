@@ -27,25 +27,25 @@ const ForgotPasswordScreen = () => {
   const [loading, setLoading] = useState(false);
 
   const handlePress = () => {
-    navigation.navigate('fpverification', { email: email})
-    // if (email === '') {
-    //   Alert.alert('Error!!', 'Please enter your email')
-    //   return
-    // }
+    // navigation.navigate('fpverification', { email: email})
+    if (email === '') {
+      Alert.alert('Error!!', 'Please enter your email')
+      return
+    }
 
-    // Alert.alert(
-    //   "Code Sent",
-    //   `We've send a code please check your email.`,
-    //   [
-    //     {
-    //       text: "OK",
-    //       onPress: () => {
-    //         setLoading(true);
-    //         emailSent();
-    //       }
-    //     }
-    //   ]
-    // )
+    Alert.alert(
+      "Code Sent",
+      `We've send a code please check your email.`,
+      [
+        {
+          text: "OK",
+          onPress: () => {
+            setLoading(true);
+            emailSent();
+          }
+        }
+      ]
+    )
 
     // Replace 'ForgetPass' with your screen name in the navigation setup
   };

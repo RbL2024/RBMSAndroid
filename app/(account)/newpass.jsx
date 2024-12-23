@@ -1,52 +1,90 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet,  ScrollView, Alert} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, BackHandler, ToastAndroid } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import RDim from '@/hooks/useDimensions';
 import { FontAwesome as FA } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
+import { setNewPassword } from '@/hooks/myAPI';
+import axios from 'axios';
 
 
 const newpass = () => {
-    const navigation = useNavigation();
-    const route = useRoute();
-    const {email} = route.params;
-    console.log(email);
-
-    useEffect(() => {
-      // Disable the back button
-      const unsubscribe = navigation.addListener('beforeRemove', (e) => {
-        // Prevent default behavior of leaving the screen
-        e.preventDefault();
-        // Optionally show a confirmation dialog
-        Alert.alert(
-          'Are you sure you want to leave this screen?',
-          'You will lose any unsaved changes.',
-          [
-            { text: "Don't leave", style: 'cancel', onPress: () => {} },
-            { text: 'Leave', style: 'destructive', onPress: () => navigation.navigate('account')},
-          ]
-        );
-      });
-  
-      return unsubscribe; // Cleanup the listener on unmount
-    }, [navigation]);
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { email } = route.params;
+  const [password, setPassword] = useState('');
+  const [cPassword, setCPassword] = useState('');
+  const [backPressCount, setBackPressCount] = useState(0);
 
 
-    const handlePress = () => {
-        navigation.navigate('login'); // Replace 'ForgetPass' with your screen name in the navigation setup
+  useEffect(() => {
+    const backAction = () => {
+      if (backPressCount === 1) {
+        navigation.navigate('account'); // Exit the app
+      } else {
+        setBackPressCount(1);
+        ToastAndroid.show('Press back again to go back but you will loose unsaved data', ToastAndroid.SHORT);
+        setTimeout(() => setBackPressCount(0), 800); // Reset backPressCount after 2 seconds
+      }
+      return true; // Prevent default behavior
     };
 
-    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
-    const [showCPassword, setShowCPassword] = useState(false);
-    
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    return () => backHandler.remove(); // Cleanup the event listener on unmount
+  }, [backPressCount]);
+
+
+  const handlePress = () => {
+    if (password === '' || cPassword === '') {
+      Alert.alert(
+        'Error',
+        'Please fill in all fields',
+      )
+      return
+    }
+    if (password !== cPassword) {
+      Alert.alert(
+        'Error',
+        'Passwords do not match',
+      )
+      return
+    }
+    saveNewPass();
+  };
+
+  const saveNewPass = async () => {
+    const data = {
+      password: password
+    }
+
+    try {
+      const response = await axios.put(`${setNewPassword}/${email}`, data);
+      Alert.alert(
+        'Success',
+        `${response.data.message}`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.navigate('login'),
+          }
+        ]
+      )
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const [showCPassword, setShowCPassword] = useState(false);
+
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>New Password</Text>
 
       <Text style={styles.notification}>
-            Please enter your newpassword to reset your current password.
-            
+        Please enter your newpassword to reset your current password.
+
       </Text>
 
       {/* Input and button section */}
@@ -60,10 +98,12 @@ const newpass = () => {
                 placeholder="Enter your new password"
                 placeholderTextColor="#9e9e9e"
                 secureTextEntry={!showPassword} // Toggle secureTextEntry based on showPassword state
+                value={password}
+                onChangeText={setPassword}
               />
               <TouchableOpacity
                 style={styles.iconContainer} // Added style to position the icon
-                onPress={()=>setShowPassword((prevState)=>!prevState)}
+                onPress={() => setShowPassword((prevState) => !prevState)}
               >
                 <FA name={showPassword ? 'eye' : 'eye-slash'} size={RDim.scale * 8} color={'#355E3B'} />
               </TouchableOpacity>
@@ -77,10 +117,12 @@ const newpass = () => {
                 placeholder="Confirm your password"
                 placeholderTextColor="#9e9e9e"
                 secureTextEntry={!showCPassword} // Toggle secureTextEntry based on showPassword state
+                value={cPassword}
+                onChangeText={setCPassword}
               />
               <TouchableOpacity
                 style={styles.iconContainer} // Added style to position the icon
-                onPress={()=>setShowCPassword((prevState)=>!prevState)}
+                onPress={() => setShowCPassword((prevState) => !prevState)}
               >
                 <FA name={showCPassword ? 'eye' : 'eye-slash'} size={RDim.scale * 8} color={'#355E3B'} />
               </TouchableOpacity>
@@ -101,12 +143,12 @@ const newpass = () => {
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    },
+  },
   container: {
     flex: 1,
     backgroundColor: '#e6e5d7', // Background color similar to the design
     paddingHorizontal: 10,
-   
+
   },
   title: {
     fontSize: 24,
@@ -125,19 +167,19 @@ const styles = StyleSheet.create({
     width: '100%',
     textAlign: 'justify',
     paddingHorizontal: 20,
-   
-},
+
+  },
   content: {
     flex: 1,
     justifyContent: 'center', // Center content vertically
     alignItems: 'center', // Center content horizontally
-   
+
   },
   inputContainer: {
     width: '90%', // Adjust the width of the input container to control layout
     maxWidth: 400, // Set a max width for larger screens
     marginBottom: 20,
-  
+
   },
   label: {
     fontSize: 18,

@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginAPI, getResBike, getResInfobyEmail } from '@/hooks/myAPI';
+import BouncyCheckbox from "react-native-bouncy-checkbox";
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -45,6 +46,16 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isChecked, setIsChecked] = useState(false);
+
+    const handleCheckboxPress = () => {
+        setIsChecked((prevState) => !prevState)
+        if (!isChecked) {
+            console.log('checked')
+        } else {
+            console.log('unchecked')
+        }
+    };
 
     const clearInputs = () => {
         setUsername('');
@@ -52,45 +63,51 @@ export default function Login() {
     }
 
     const handleLogin = async () => {
-        if (username === '' || password === '') {
-            Toast.error('Please fill in all fields');
-            return;
-        }
-        setLoading(true);
-        try {
-            const response = await axios.post(loginAPI, { i_username: username, i_password: password });
-            const { isFound, message, loginData } = response.data;
-
-            if (isFound) {
-                Toast.success(message);
-                setLoggedIn(true);
-
-                const userData = {
-                    id: loginData._id,
-                    name: `${loginData.c_first_name} ${loginData.c_middle_name.charAt(0)}. ${loginData.c_last_name}`,
-                    address: `${loginData.c_full_address.street}, ${loginData.c_full_address.city}, ${loginData.c_full_address.province}`,
-                    phone: loginData.c_phone,
-                    bday: loginData.c_bdate,
-                    email: loginData.c_email,
-                };
-                await storeData(userData);
-
-                const bikeReserveResponse = await axios.get(`${getResInfobyEmail}/${loginData.c_email}`);
-                const bikeId = bikeReserveResponse.data.bike_id; // Adjust according to your API response structure
-                await storeBikeId(bikeId);
-
-                await delay(2000);
-                clearInputs();
-                nav.navigate('index');
-            } else {
-                Toast.error(message);
+        if (isChecked) {
+            console.log('log in with temp acc')
+        } else {
+            console.log('log in with real acc')
+            if (username === '' || password === '') {
+                Toast.error('Please fill in all fields');
+                return;
             }
-        } catch (error) {
-            console.error('Login error:', error);
-            Toast.error('An error occurred. Please try again.');
-        } finally {
-            setLoading(false);
+            setLoading(true);
+            try {
+                const response = await axios.post(loginAPI, { i_username: username, i_password: password });
+                const { isFound, message, loginData } = response.data;
+
+                if (isFound) {
+                    Toast.success(message);
+                    setLoggedIn(true);
+
+                    const userData = {
+                        id: loginData._id,
+                        name: `${loginData.c_first_name} ${loginData.c_middle_name.charAt(0)}. ${loginData.c_last_name}`,
+                        address: `${loginData.c_full_address.street}, ${loginData.c_full_address.city}, ${loginData.c_full_address.province}`,
+                        phone: loginData.c_phone,
+                        bday: loginData.c_bdate,
+                        email: loginData.c_email,
+                    };
+                    await storeData(userData);
+
+                    const bikeReserveResponse = await axios.get(`${getResInfobyEmail}/${loginData.c_email}`);
+                    const bikeId = bikeReserveResponse.data.bike_id; // Adjust according to your API response structure
+                    await storeBikeId(bikeId);
+
+                    await delay(2000);
+                    clearInputs();
+                    nav.navigate('index');
+                } else {
+                    Toast.error(message);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                Toast.error('An error occurred. Please try again.');
+            } finally {
+                setLoading(false);
+            }
         }
+
     }
 
 
@@ -98,7 +115,7 @@ export default function Login() {
         <View style={styles.container}>
             <ToastManager
                 position="top"
-                textStyle={{ fontSize: 12, paddingHorizontal:10 }}
+                textStyle={{ fontSize: 12, paddingHorizontal: 10 }}
                 duration={2000}
                 showCloseIcon={false}
                 showProgressBar={false}
@@ -134,6 +151,18 @@ export default function Login() {
                             <FA name={showPassword ? 'eye' : 'eye-slash'} size={RDim.scale * 8} color={'#355E3B'} />
                         </TouchableOpacity>
                     </View>
+                </View>
+                <View>
+                    <BouncyCheckbox
+                        size={20}
+                        fillColor="#355E3B"
+                        text="Check if using temporary account"
+                        innerIconStyle={{ borderWidth: 2 }}
+                        textStyle={{ fontFamily: "mplus" }}
+                        isChecked={isChecked}
+                        onPress={handleCheckboxPress}
+                        style={{ paddingLeft: RDim.width * 0.1, paddingBottom: RDim.height * 0.03 }}
+                    />
                 </View>
                 <View style={{ justifyContent: 'center', alignItems: 'center', paddingTop: RDim.height * 0.02 }}>
                     {loading ? (

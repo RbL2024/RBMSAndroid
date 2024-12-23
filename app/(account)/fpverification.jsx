@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import React, {useState, useEffect} from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, Alert, ToastAndroid, BackHandler } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useRoute } from '@react-navigation/native';
 import RDim from '@/hooks/useDimensions';
@@ -9,16 +9,34 @@ const ForgotPasswordScreen = () => {
     const {email, code} = route.params;
     const userEmail = email;
     const [inputCode, setInputCode] = useState('')
+    const [backPressCount, setBackPressCount] = useState(0);
+
+    useEffect(() => {
+      const backAction = () => {
+        if (backPressCount === 1) {
+          navigation.navigate('account'); // Exit the app
+        } else {
+          setBackPressCount(1);
+          ToastAndroid.show('Press back again to go back but you will loose unsaved data', ToastAndroid.SHORT);
+          setTimeout(() => setBackPressCount(0), 800); // Reset backPressCount after 2 seconds
+        }
+        return true; // Prevent default behavior
+      };
+  
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+  
+      return () => backHandler.remove(); // Cleanup the event listener on unmount
+    }, [backPressCount]);
 
     const handlePress = () => {
-      // if(inputCode===''){
-      //   Alert.alert('Error!','Please enter your code');
-      //   return
-      // }
-      // if(inputCode !== code){
-      //   Alert.alert('Error!','Invalid code');
-      //   return
-      // }
+      if(inputCode===''){
+        Alert.alert('Error!','Please enter your code');
+        return
+      }
+      if(inputCode !== code){
+        Alert.alert('Error!','Invalid code');
+        return
+      }
       
         navigation.navigate('newpass', {email:email}); // Replace 'ForgetPass' with your screen name in the navigation setup
         
