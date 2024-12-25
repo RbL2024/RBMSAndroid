@@ -40,10 +40,12 @@ export const fetchKidsBikes = async () => {
 }
 
 export const loginAPI = `${apiServer}/rbmsa/loginAcc`;
+export const loginTempAPI = `${apiServer}/rbmsa/loginTempAcc`;
 export const registerAPI = `${apiServer}/rbmsa/createUser`;
 export const reserveAPI = `${apiServer}/rbmsa/UpdateReserve`;
 export const getResInfo = `${apiServer}/rbmsa/getReservations`;
 export const getResInfobyEmail = `${apiServer}/rbmsa/getReservationsviaEmail`;
+export const getRentInfobyEmail = `${apiServer}/rbmsa/getRentedsviaEmail`;
 export const getResBike = `${apiServer}/rbmsa/reservedBike`;
 export const checkBStat = `${apiServer}/rbmsa/checkBStat`;
 export const getRentedBike = `${apiServer}/rbmsa/getRentedBike`;

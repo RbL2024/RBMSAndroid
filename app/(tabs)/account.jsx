@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, ActivityIndicator, Button, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, ActivityIndicator, Button, TouchableOpacity, Alert } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { useFocusEffect } from '@react-navigation/native';
 import Lorreg from '../(account)/lorreg';
@@ -35,15 +35,48 @@ const getData = async () => {
   }
 };
 
+const getTempData = async () => {
+  try {
+    const id = await AsyncStorage.getItem('id');
+    const name = await AsyncStorage.getItem('name');
+    const username = await AsyncStorage.getItem('username');
+    const phone = await AsyncStorage.getItem('phone');
+    const email = await AsyncStorage.getItem('email');
+    const isTemp = await AsyncStorage.getItem('isTemp');
+    const expToken = await AsyncStorage.getItem('exp');
+
+    if (id !== null && name !== null && phone !== null && email !== null && isTemp !== null && username !== null && expToken !== null) {
+
+      return { id, name, phone, email, isTemp, username, expToken };
+
+    } else {
+      return 'undefined';
+    }
+  } catch (e) {
+    console.error('Failed to fetch data', e);
+  }
+};
 
 const Account = () => {
   const nav = useNavigation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  const validateToken = (token) => {
+    const currentTime = Math.floor(Date.now() / 1000);
+    return token && token.exp > currentTime;
+  };
+
   const checkLoginStatus = async () => {
     try {
       const value = await AsyncStorage.getItem('isLoggedIn'); // Retrieve value from AsyncStorage
+      const token = await AsyncStorage.getItem('exp');
+      // console.log(validateToken(JSON.parse(token)))
+      if(validateToken(JSON.parse(token))){
+        await AsyncStorage.clear();
+        setIsLoggedIn(false);
+        nav.navigate('index');
+      }
       if (value !== null) {
         setIsLoggedIn(JSON.parse(value)); // Parse and set the login status
       } else {
@@ -57,8 +90,10 @@ const Account = () => {
   };
 
   const [userInfo, setUserInfo] = useState({});
+  const [tempInfo, setTempInfo] = useState({});
   const getUserInfo = async () => {
     setUserInfo(await getData())
+    setTempInfo(await getTempData())
   }
   useFocusEffect(
     React.useCallback(() => {
@@ -66,20 +101,25 @@ const Account = () => {
       checkLoginStatus(); // Call the function to check login status
       getUserInfo();
 
-      // console.log(userInfo);
+      // console.log(tempInfo.name);
     }, [])
   );
 
   const handleReset = () => {
-    nav.navigate('(resetpass)'); 
+    if(tempInfo.isTemp === 'true'){
+      Alert.alert('Error', 'Temporary account cannot reset password');
+    }else{
+      nav.navigate('(resetpass)');
+    }
 };
 
   const handleLogout = async () => {
     setLoading(true);
     await delay(2000);
     try {
-      await AsyncStorage.removeItem('isLoggedIn'); // Remove login status from AsyncStorage
-      await AsyncStorage.removeItem('bike_id');
+      // await AsyncStorage.removeItem('isLoggedIn'); // Remove login status from AsyncStorage
+      // await AsyncStorage.removeItem('bike_id');
+      await AsyncStorage.clear();
       setIsLoggedIn(false); // Update state to reflect logged out status
       nav.navigate('index');
     } catch (error) {
@@ -103,7 +143,7 @@ const Account = () => {
           >
             <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 10, marginVertical: 10, marginTop: 30, backgroundColor: "#D6D6CA", width: RDim.width * .9, alignSelf: 'center', borderRadius: 5, paddingVertical: 10, paddingHorizontal: 5 }}>
               <MaterialCommunityIcons name="account-circle" size={30} color="#355E3B" />
-              <Text style={{ fontSize: RDim.width * 0.06, color: 'black', fontFamily: 'mplus' }} numberOfLines={1}>Hi, {userInfo.name}</Text>
+              <Text style={{ fontSize: RDim.width * 0.06, color: 'black', fontFamily: 'mplus' }} numberOfLines={1}>Hi, {userInfo.name?userInfo.name:tempInfo.username}</Text>
             </View>
             <View style={styles.asCon}>
               <View>
@@ -115,7 +155,7 @@ const Account = () => {
                   <Text style={styles.default}>Linked Email</Text>
                 </View>
                 <View style={{ alignItems: 'center' }}>
-                  <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.email}</Text>
+                  <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.email?userInfo.email:tempInfo.email}</Text>
                 </View>
               </View>
               <HorizontalLine />
@@ -141,7 +181,7 @@ const Account = () => {
                     <Text style={styles.default}>Name</Text>
                   </View>
                   <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.name}</Text>
+                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.name?userInfo.name:tempInfo.name}</Text>
                   </View>
                 </View>
                 <HorizontalLine />
@@ -151,7 +191,7 @@ const Account = () => {
                     <Text style={styles.default}>Address</Text>
                   </View>
                   <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.address ? userInfo.address.split(',').slice(-2).join(',') : 'Address not available'}</Text>
+                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.address ? userInfo.address.split(',').slice(-2).join(',') : 'N/A'}</Text>
                   </View>
                 </View>
                 <HorizontalLine />
@@ -161,7 +201,7 @@ const Account = () => {
                     <Text style={styles.default}>Birthdate</Text>
                   </View>
                   <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.bday}</Text>
+                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.bday?userInfo.bday:'N/A'}</Text>
                   </View>
                 </View>
               </View>

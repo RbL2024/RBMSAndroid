@@ -8,8 +8,9 @@ import bikeLogo from '../../assets/images/bikeLogo.png';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginAPI, getResBike, getResInfobyEmail } from '@/hooks/myAPI';
+import { loginAPI, loginTempAPI, getResInfobyEmail, getRentInfobyEmail } from '@/hooks/myAPI';
 import BouncyCheckbox from "react-native-bouncy-checkbox";
+import JWT from 'expo-jwt';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -40,6 +41,17 @@ const storeBikeId = async (bikeId) => {
     }
 };
 
+
+const verifyToken = (token) => {
+    try {
+        const decoded = JWT.decode(token, 'nangdahilsaflattops'); // Replace 'your-secret-key' with your actual secret key
+        return decoded;
+    } catch (error) {
+        // console.error('Error verifying token:', error);
+        return null;
+    }
+};
+
 export default function Login() {
     const nav = useNavigation();
     const [username, setUsername] = useState('');
@@ -65,8 +77,63 @@ export default function Login() {
     const handleLogin = async () => {
         if (isChecked) {
             console.log('log in with temp acc')
+            if (username === '' || password === '') {
+                Toast.error('Please fill in all fields');
+                return;
+            }
+            setLoading(true);
+            try {
+                const response = await axios.post(loginTempAPI, { i_username: username, i_password: password });
+                const { isFound, message, loginData } = response.data;
+
+
+                if (isFound) {
+                    Toast.success(message);
+                    console.log(loginData)
+                    setLoggedIn(true);
+
+                    const bikeRentResponse = await axios.get(`${getRentInfobyEmail}/${loginData.t_email}`);
+                    const bikeId = bikeRentResponse.data.bike_id; // Adjust according to your API response structure
+                    await storeBikeId(bikeId);
+
+                    const token = loginData.tokenExp;
+                    // console.log('Token:', token);
+                    if (token) {
+                        const decodedToken = verifyToken(token);
+                        if (decodedToken) {
+                            // console.log('Token is valid:', JSON.stringify(decodedToken));
+                            const tokenData = {
+                                id: decodedToken.id,
+                                name: loginData.t_name,
+                                username: decodedToken.username,
+                                email: decodedToken.email,
+                                phone: decodedToken.phone,
+                                isTemp: 'true',
+                                exp: decodedToken.exp.toString(),
+                                iat: decodedToken.iat.toString(),
+                                // Add other keys you want to store
+                            };
+                            await storeData(tokenData);
+                            await delay(2000);
+                            clearInputs();
+                            nav.navigate('index');
+                        } else {
+                            // console.error('Invalid token');
+                            Toast.error('Your temporary account is expired.');
+                        }
+                    }
+
+                } else {
+                    Toast.error(message);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                Toast.error('An error occurred. Please try again.');
+            } finally {
+                setLoading(false);
+            }
         } else {
-            console.log('log in with real acc')
+            // console.log('log in with real acc')
             if (username === '' || password === '') {
                 Toast.error('Please fill in all fields');
                 return;
@@ -119,6 +186,7 @@ export default function Login() {
                 duration={2000}
                 showCloseIcon={false}
                 showProgressBar={false}
+                width={'auto'}
             />
             <View>
                 <Image source={bikeLogo} style={styles.image} />

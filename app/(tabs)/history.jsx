@@ -8,33 +8,27 @@ import { getResBikeAll } from "@/hooks/myAPI";
 import axios from "axios";
 
 
-const getEmail = async () => {
-  try {
-    const email = await AsyncStorage.getItem('email');
-    if (email !== null) {
-      return email;
-    } else {
-      return 'undefined';
-    }
-  } catch (e) {
-    console.error('Failed to fetch data', e);
-  }
-};
-
 
 const History = () => {
   // Sample data
   const [email, setEmail] = useState([]);
   const [datagathered, setDatagathered] = useState([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isTemp, setIsTemp] = useState(false);
 
   useFocusEffect(
     React.useCallback(() => {
       const checkLoginStatusAndEmail = async () => {
         try {
           const loginValue = await AsyncStorage.getItem('isLoggedIn');
+          const isTempValue = await AsyncStorage.getItem('isTemp');
+          const isTemp = JSON.parse(isTempValue);
+          setIsTemp(isTemp);
+
           if (loginValue !== null) {
             const loggedIn = JSON.parse(loginValue);
+            
+
             setIsLoggedIn(loggedIn);
 
             if (loggedIn) {
@@ -69,7 +63,8 @@ const History = () => {
   };
 
   useEffect(() => {
-    if (isLoggedIn) {
+    
+    if (isLoggedIn && !isTemp) {
       getReservedBike(); // Fetch data only if logged in
 
       const intervalId = setInterval(() => {
