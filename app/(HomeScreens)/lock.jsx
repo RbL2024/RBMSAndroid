@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Switch, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, Switch, Modal, TouchableOpacity, Alert } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -8,11 +8,13 @@ import * as IntentLauncher from 'expo-intent-launcher';
 import * as Network from 'expo-network';
 import ToastManager, { Toast } from 'toastify-react-native';
 import axios from 'axios';
-import { getRentedBikeReserve, updateLockstate, updateAlarmstate } from '@/hooks/myAPI';
+import { getRentedBikeReserve, getRented, updateLockstate, updateAlarmstate, updateTempLockstate, updateTempAlarmstate } from '@/hooks/myAPI';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 
 export default function Lock() {
+  const navigation = useNavigation();
   const [isWifiConnected, setIsWifiConnected] = useState(false);
   const [isBluetoothConnected, setIsBluetoothConnected] = useState(false);  // Default off
   const [isSmartLockDisabled, setIsSmartLockDisabled] = useState();     // Default off
@@ -23,40 +25,102 @@ export default function Lock() {
   const [isAlarmTriggered, setIsAlarmTriggered] = useState(false);
 
 
-  const enableESPlock = async (state) => {
+  const [bikeID, setBikeID] = useState(null);
+
+  const handleESP = async (lockState, alarmState) => {
     try {
       const bID = await AsyncStorage.getItem('bike_id');
       const email = await AsyncStorage.getItem('email');
       if (bID && email) {
-        const data = { bike_id: bID, email: email, lockState: state };
-        const response = await axios.post('http://192.168.1.184/send', {
-          method: 'POST',
+        const data = {
+          bid: bID,
+          email: email,
+          lockState: lockState,
+          alarmState: alarmState
+        };
+  
+        console.log('Sending data:', data); // Log the data being sent
+  
+        const response = await axios.post('http://192.168.1.189:80/post-message', data, {
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',  // Correct content type
           },
-          body: JSON.stringify(data), // Send data as a URL-encoded string
         });
+  
+        console.log('Server Response:', response.data); // Log the server response
+        
+      } else {
+        console.error('Missing bike_id or email');
       }
     } catch (error) {
-      console.error('Error sending data:', error);
+      Alert.alert(
+        'Error',
+        error.response.data,
+        [{ text: 'OK', onPress: () => navigation.navigate('index') }],
+        { cancelable: false }
+      );
+      // if (error.response) {
+      //   // The request was made and the server responded with a status code
+      //   // that falls out of the range of 2xx
+      //   console.error('Error response data:', error.response.data);
+      //   console.error('Error response status:', error.response.status);
+      //   console.error('Error response headers:', error.response.headers);
+      // } else {
+      //   // Something happened in setting up the request that triggered an Error
+      //   console.error('Error message:', error.message);
+        
+      // }
     }
-  }
-  
+  };
+
   useEffect(() => {
     const initials = async () => {
       try {
         const bID = await AsyncStorage.getItem('bike_id');
         const email = await AsyncStorage.getItem('email');
-        if (bID && email) {
+        const isTempValue = await AsyncStorage.getItem('isTemp');
+        const isTemp = JSON.parse(isTempValue);
+
+        setBikeID(bID);
+        // console.log(isTemp);
+        if (bID && email && isTemp) {
+          // console.log('temp');
+          const data = { bID: bID, email: email };
+          const getRBR = await axios.get(`${getRented}/${data.email}/${data.bID}`);
+          const lState = getRBR.data.records[0].lockState
+          const aState = getRBR.data.records[0].alarmState
+          setIsSmartLockDisabled(lState); //console.log(lState);
+          setIsAlarmDisabled(aState); //console.log(aState);
+          // enableESPlock(lState);
+          // enableESPalarm(aState);
+          handleESP(lState, aState);
+        } else {
+          // console.log('not temp');
           const data = { bID: bID, email: email };
           const getRBR = await axios.get(`${getRentedBikeReserve}/${data.email}/${data.bID}`);
           const lState = getRBR.data.records[0].lockState
           const aState = getRBR.data.records[0].alarmState
           setIsSmartLockDisabled(lState); //console.log(lState);
           setIsAlarmDisabled(aState); //console.log(aState);
+          // enableESPlock(lState);
+          // enableESPalarm(aState);
+          handleESP(lState, aState);
         }
+        // if (bID && email) {
+        //   const data = { bID: bID, email: email };
+        //   const getRBR = await axios.get(`${getRentedBikeReserve}/${data.email}/${data.bID}`);
+        //   const lState = getRBR.data.records[0].lockState
+        //   const aState = getRBR.data.records[0].alarmState
+        //   setIsSmartLockDisabled(lState); //console.log(lState);
+        //   setIsAlarmDisabled(aState); //console.log(aState);
+        // }
       } catch (error) {
-        console.log(error);
+        Alert.alert(
+          'Error', 
+          'You dont have any bike rented',
+          [{ text: 'OK', onPress: () => navigation.navigate('index') }],
+          { cancelable: false }
+        );
       }
     }
     initials();
@@ -66,7 +130,15 @@ export default function Lock() {
     try {
       const bID = await AsyncStorage.getItem('bike_id');
       const email = await AsyncStorage.getItem('email');
-      if (bID && email) {
+      const isTempValue = await AsyncStorage.getItem('isTemp');
+      const isTemp = JSON.parse(isTempValue);
+
+      if (bID && email && isTemp) {
+        const data = { bike_id: bID, email: email, lockState: state };
+        // console.log(data)
+        const updateLS = await axios.put(updateTempLockstate, data)
+        // console.log(updateLS.data);
+      } else {
         const data = { bike_id: bID, email: email, lockState: state };
         // console.log(data)
         const updateLS = await axios.put(updateLockstate, data)
@@ -80,7 +152,15 @@ export default function Lock() {
     try {
       const bID = await AsyncStorage.getItem('bike_id');
       const email = await AsyncStorage.getItem('email');
-      if (bID && email) {
+      const isTempValue = await AsyncStorage.getItem('isTemp');
+      const isTemp = JSON.parse(isTempValue);
+
+      if (bID && email && isTemp) {
+        const data = { bike_id: bID, email: email, alarmState: state };
+        // console.log(data)
+        const updateLS = await axios.put(updateTempAlarmstate, data)
+        // console.log(updateLS.data);
+      }else{
         const data = { bike_id: bID, email: email, alarmState: state };
         // console.log(data)
         const updateLS = await axios.put(updateAlarmstate, data)
@@ -128,7 +208,7 @@ export default function Lock() {
       setCurrentToggle('smartLock');
       setModalVisible(true);
     } else {
-      enableESPlock(true)
+      handleESP(true, isAlarmDisabled)
       updateLockState(true);
       setIsSmartLockDisabled(true);
     }
@@ -141,6 +221,7 @@ export default function Lock() {
       setCurrentToggle('alarm');
       setModalVisible(true);
     } else {
+      handleESP(isSmartLockDisabled, true)
       updateAlarmState(true)
       setIsAlarmDisabled(true);
     }
@@ -154,12 +235,15 @@ export default function Lock() {
       setIsSmartLockDisabled(false);
       setIsAlarmDisabled(false);
     } else if (currentToggle === 'alarm') {
+      handleESP(isSmartLockDisabled, false)
       updateAlarmState(false)
       setIsAlarmDisabled(false);
     } else if (currentToggle === 'smartLock') {
       // If confirmed, disable smart lock
-      enableESPlock(false)
+      handleESP(false, isAlarmDisabled)
       updateLockState(false);
+      updateAlarmState(false)
+      setIsAlarmDisabled(false);
       setIsSmartLockDisabled(false);
     }
     setCurrentToggle(null);
@@ -212,7 +296,7 @@ export default function Lock() {
             style={styles.icon}
           /> */}
           <Text style={[styles.optionText, { textAlign: 'center' }]}>
-            {"Click and Find RBMS Wifi then Connect"}
+            {`Click and Find ${bikeID} Wifi then Connect`}
           </Text>
         </View>
       </TouchableOpacity>

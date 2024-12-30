@@ -35,48 +35,61 @@ const getData = async () => {
   }
 };
 
-const getTempData = async () => {
-  try {
-    const id = await AsyncStorage.getItem('id');
-    const name = await AsyncStorage.getItem('name');
-    const username = await AsyncStorage.getItem('username');
-    const phone = await AsyncStorage.getItem('phone');
-    const email = await AsyncStorage.getItem('email');
-    const isTemp = await AsyncStorage.getItem('isTemp');
-    const expToken = await AsyncStorage.getItem('exp');
 
-    if (id !== null && name !== null && phone !== null && email !== null && isTemp !== null && username !== null && expToken !== null) {
-
-      return { id, name, phone, email, isTemp, username, expToken };
-
-    } else {
-      return 'undefined';
-    }
-  } catch (e) {
-    console.error('Failed to fetch data', e);
-  }
-};
 
 const Account = () => {
   const nav = useNavigation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const validateToken = (token) => {
-    const currentTime = Math.floor(Date.now() / 1000);
-    return token && token.exp > currentTime;
+
+  const isTokenExpired = (expToken) => {
+    const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+    return currentTime > expToken;
+  };
+  
+  const getTempData = async () => {
+    try {
+      const id = await AsyncStorage.getItem('id');
+      const name = await AsyncStorage.getItem('name');
+      const username = await AsyncStorage.getItem('username');
+      const phone = await AsyncStorage.getItem('phone');
+      const email = await AsyncStorage.getItem('email');
+      const isTemp = await AsyncStorage.getItem('isTemp');
+      const expToken = await AsyncStorage.getItem('exp');
+  
+      if (id !== null && name !== null && phone !== null && email !== null && isTemp !== null && username !== null && expToken !== null) {
+        if (expToken && isTokenExpired(expToken)) {
+          // Token is expired, log out the user
+          Alert.alert(
+            'Session Expired', 
+            'Your session has expired. Please rent again or make a new account to reserve a bike',
+            [
+              { 
+                text: 'OK', 
+                onPress: () => {
+                  setIsLoggedIn(false);
+                  handleLogout()
+                } 
+              }
+            ]
+          
+          );
+          return 'expired';
+        }
+        return { id, name, phone, email, isTemp, username, expToken };
+  
+      } else {
+        return 'undefined';
+      }
+    } catch (e) {
+      console.error('Failed to fetch data', e);
+    }
   };
 
   const checkLoginStatus = async () => {
     try {
       const value = await AsyncStorage.getItem('isLoggedIn'); // Retrieve value from AsyncStorage
-      const token = await AsyncStorage.getItem('exp');
-      // console.log(validateToken(JSON.parse(token)))
-      if(validateToken(JSON.parse(token))){
-        await AsyncStorage.clear();
-        setIsLoggedIn(false);
-        nav.navigate('index');
-      }
       if (value !== null) {
         setIsLoggedIn(JSON.parse(value)); // Parse and set the login status
       } else {
@@ -89,11 +102,13 @@ const Account = () => {
     }
   };
 
+
   const [userInfo, setUserInfo] = useState({});
   const [tempInfo, setTempInfo] = useState({});
   const getUserInfo = async () => {
     setUserInfo(await getData())
     setTempInfo(await getTempData())
+    
   }
   useFocusEffect(
     React.useCallback(() => {
@@ -106,12 +121,13 @@ const Account = () => {
   );
 
   const handleReset = () => {
-    if(tempInfo.isTemp === 'true'){
+    if (tempInfo.isTemp === 'true') {
       Alert.alert('Error', 'Temporary account cannot reset password');
-    }else{
+    } else {
       nav.navigate('(resetpass)');
     }
-};
+  };
+
 
   const handleLogout = async () => {
     setLoading(true);
@@ -143,7 +159,7 @@ const Account = () => {
           >
             <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center', gap: 10, marginVertical: 10, marginTop: 30, backgroundColor: "#D6D6CA", width: RDim.width * .9, alignSelf: 'center', borderRadius: 5, paddingVertical: 10, paddingHorizontal: 5 }}>
               <MaterialCommunityIcons name="account-circle" size={30} color="#355E3B" />
-              <Text style={{ fontSize: RDim.width * 0.06, color: 'black', fontFamily: 'mplus' }} numberOfLines={1}>Hi, {userInfo.name?userInfo.name:tempInfo.username}</Text>
+              <Text style={{ fontSize: RDim.width * 0.06, color: 'black', fontFamily: 'mplus' }} numberOfLines={1}>Hi, {userInfo.name ? userInfo.name : tempInfo.username}</Text>
             </View>
             <View style={styles.asCon}>
               <View>
@@ -155,7 +171,7 @@ const Account = () => {
                   <Text style={styles.default}>Linked Email</Text>
                 </View>
                 <View style={{ alignItems: 'center' }}>
-                  <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.email?userInfo.email:tempInfo.email}</Text>
+                  <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.email ? userInfo.email : tempInfo.email}</Text>
                 </View>
               </View>
               <HorizontalLine />
@@ -181,7 +197,7 @@ const Account = () => {
                     <Text style={styles.default}>Name</Text>
                   </View>
                   <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.name?userInfo.name:tempInfo.name}</Text>
+                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.name ? userInfo.name : tempInfo.name}</Text>
                   </View>
                 </View>
                 <HorizontalLine />
@@ -201,7 +217,7 @@ const Account = () => {
                     <Text style={styles.default}>Birthdate</Text>
                   </View>
                   <View style={{ alignItems: 'center' }}>
-                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.bday?userInfo.bday:'N/A'}</Text>
+                    <Text style={{ fontSize: RDim.width * 0.04 }}>{userInfo.bday ? userInfo.bday : 'N/A'}</Text>
                   </View>
                 </View>
               </View>
@@ -226,6 +242,13 @@ const Account = () => {
               <View>
                 <Text style={[{ textAlign: 'center' }]}>Once deleted, all account information will be removed. You will not be able to recover this information</Text>
               </View> */}
+              {
+                tempInfo.isTemp === 'true' ? (
+                  <View>
+                    <Text style={[{ textAlign: 'center', color: '#AB0505', fontFamily: 'mplusb', }]}>While using Temporary Account, You cannot reserve a bike</Text>
+                  </View>
+                ) : null
+              }
             </View>
             <HorizontalLine style={{ marginTop: RDim.height * .25 }} />
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>

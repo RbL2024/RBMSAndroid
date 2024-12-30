@@ -89,7 +89,7 @@ export default function Login() {
 
                 if (isFound) {
                     Toast.success(message);
-                    console.log(loginData)
+                    // console.log(loginData)
                     setLoggedIn(true);
 
                     const bikeRentResponse = await axios.get(`${getRentInfobyEmail}/${loginData.t_email}`);
@@ -120,6 +120,7 @@ export default function Login() {
                         } else {
                             // console.error('Invalid token');
                             Toast.error('Your temporary account is expired.');
+                            setLoggedIn(false);
                         }
                     }
 

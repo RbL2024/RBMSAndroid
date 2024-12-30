@@ -360,9 +360,9 @@ export default function Timetrack() {
         <View>
           <View style={styles.bcard}>
             {
-              reservedBike.map((bike) => {
+              reservedBike?.map((bike, index) => {
                 return (
-                  <View key={bike.bike_id} style={styles.bcardCon}>
+                  <View key={index} style={styles.bcardCon}>
                     <Image source={{ uri: bike.bike_image_url }} style={styles.bimage} />
                     <View style={styles.btextContainer}>
                       <Text style={styles.bdate}>Reservation No.: {bike.reservation_number}</Text>

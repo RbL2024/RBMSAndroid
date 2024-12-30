@@ -43,6 +43,7 @@ export default function Rentdue() {
     const checkBikeStatus = async () => {
       const bID = await AsyncStorage.getItem('bike_id');
       const email = await AsyncStorage.getItem('email');
+      
       if (bID && email) {
         const data = { bID: bID, email: email };
         try {
@@ -163,9 +164,9 @@ export default function Rentdue() {
       <View>
         <View style={styles.bcard}>
           {
-            rentedBike.map((bike) => {
+            rentedBike?.map((bike, index) => {
               return (
-                <View key={bike._id} style={styles.bcardCon}>
+                <View key={index} style={styles.bcardCon}>
                   <Image source={{ uri: bike.bike_image_url }} style={styles.bimage} />
                   <View style={styles.btextContainer}>
                     <Text style={styles.bdate}>{bike.bike_name}</Text>
@@ -180,9 +181,9 @@ export default function Rentdue() {
       </View>
       <View style={styles.bcard}>
         {
-          rentedBike.map((bike) => {
+          rentedBike?.map((bike, index) => {
             return (
-              <View style={styles.btextContainer}>
+              <View key={index} style={styles.btextContainer}>
                 <Text style={styles.bdate}>Charge Cost per 30 mins(25% of &#8369;{bike.bike_rent_price}): &#8369;{parseInt(bike.bike_rent_price, 10) * .25}</Text>
                 <Text style={styles.bname}>Charge Cost per 5 mins: &#8369;{(parseInt(bike.bike_rent_price, 10) * .25) / 30 * 5}</Text>
                 <Text style={styles.bcontact}>Total Charge(&#8369;): {totalCharge} pesos</Text>

@@ -57,5 +57,8 @@ export const emailResetCode = `${apiServer}/rbmsa/sendPassResetCode`;
 export const setNewPassword = `${apiServer}/rbmsa/setNewPass`;
 
 export const getRentedBikeReserve = `${apiServer}/esp32/getRentedBikeReserve`;
+export const getRented = `${apiServer}/esp32/getRentedBike`;
 export const updateLockstate = `${apiServer}/esp32/updateLockState`;
 export const updateAlarmstate = `${apiServer}/esp32/updateAlarmState`;
+export const updateTempLockstate = `${apiServer}/esp32/updateTempLockState`;
+export const updateTempAlarmstate = `${apiServer}/esp32/updateTempAlarmState`;

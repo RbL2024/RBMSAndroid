@@ -13,6 +13,7 @@ export default function Preview() {
     // console.log(route.params);
     const { params } = route;
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isTemp, setIsTemp] = useState(false);
     const [loading, setLoading] = useState(true);
 
 
@@ -21,6 +22,10 @@ export default function Preview() {
     const checkLoginStatus = async () => {
         try {
             const value = await AsyncStorage.getItem('isLoggedIn'); // Retrieve value from AsyncStorage
+            const isTempValue = await AsyncStorage.getItem('isTemp'); // Retrieve value from AsyncStorage
+            const isTemp = JSON.parse(isTempValue); // Parse the value to boolean
+            setIsTemp(isTemp); // Set the isTemp state
+
             if (value !== null) {
                 setIsLoggedIn(JSON.parse(value)); // Parse and set the login status
             } else {
@@ -76,8 +81,8 @@ export default function Preview() {
 
                         <Link
                             href={{
-                                pathname: isLoggedIn ? '/reserve' : '/account',
-                                params: isLoggedIn ? { ...params } : ''
+                                pathname: isLoggedIn&&!isTemp ? '/reserve' : '/account',
+                                params: isLoggedIn&&!isTemp ? { ...params } : ''
                             }}
                         >
                             <View style={styles.btnReserve}>
