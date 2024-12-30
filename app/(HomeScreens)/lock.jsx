@@ -16,13 +16,12 @@ import { useNavigation } from '@react-navigation/native';
 export default function Lock() {
   const navigation = useNavigation();
   const [isWifiConnected, setIsWifiConnected] = useState(false);
-  const [isBluetoothConnected, setIsBluetoothConnected] = useState(false);  // Default off
-  const [isSmartLockDisabled, setIsSmartLockDisabled] = useState();     // Default off
-  const [isAlarmDisabled, setIsAlarmDisabled] = useState(false);             // Default off
+  const [isBluetoothConnected, setIsBluetoothConnected] = useState(false); 
+  const [isSmartLockDisabled, setIsSmartLockDisabled] = useState();     
+  const [isAlarmDisabled, setIsAlarmDisabled] = useState(false);            
   const [modalVisible, setModalVisible] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
-  const [currentToggle, setCurrentToggle] = useState(null); // Track which toggle is being confirmed
-  const [isAlarmTriggered, setIsAlarmTriggered] = useState(false);
+  const [currentToggle, setCurrentToggle] = useState(null); 
 
 
   const [bikeID, setBikeID] = useState(null);
@@ -39,7 +38,7 @@ export default function Lock() {
           alarmState: alarmState
         };
   
-        console.log('Sending data:', data); // Log the data being sent
+        console.log('Sending data:', data); 
   
         const response = await axios.post('http://192.168.1.189:80/post-message', data, {
           headers: {
@@ -82,38 +81,23 @@ export default function Lock() {
         const isTemp = JSON.parse(isTempValue);
 
         setBikeID(bID);
-        // console.log(isTemp);
         if (bID && email && isTemp) {
-          // console.log('temp');
           const data = { bID: bID, email: email };
           const getRBR = await axios.get(`${getRented}/${data.email}/${data.bID}`);
           const lState = getRBR.data.records[0].lockState
           const aState = getRBR.data.records[0].alarmState
-          setIsSmartLockDisabled(lState); //console.log(lState);
-          setIsAlarmDisabled(aState); //console.log(aState);
-          // enableESPlock(lState);
-          // enableESPalarm(aState);
+          setIsSmartLockDisabled(lState);
+          setIsAlarmDisabled(aState); 
           handleESP(lState, aState);
         } else {
-          // console.log('not temp');
           const data = { bID: bID, email: email };
           const getRBR = await axios.get(`${getRentedBikeReserve}/${data.email}/${data.bID}`);
           const lState = getRBR.data.records[0].lockState
           const aState = getRBR.data.records[0].alarmState
-          setIsSmartLockDisabled(lState); //console.log(lState);
-          setIsAlarmDisabled(aState); //console.log(aState);
-          // enableESPlock(lState);
-          // enableESPalarm(aState);
+          setIsSmartLockDisabled(lState); 
+          setIsAlarmDisabled(aState); 
           handleESP(lState, aState);
         }
-        // if (bID && email) {
-        //   const data = { bID: bID, email: email };
-        //   const getRBR = await axios.get(`${getRentedBikeReserve}/${data.email}/${data.bID}`);
-        //   const lState = getRBR.data.records[0].lockState
-        //   const aState = getRBR.data.records[0].alarmState
-        //   setIsSmartLockDisabled(lState); //console.log(lState);
-        //   setIsAlarmDisabled(aState); //console.log(aState);
-        // }
       } catch (error) {
         Alert.alert(
           'Error', 
@@ -190,16 +174,6 @@ export default function Lock() {
       console.error("Error opening Wi-Fi settings: ", error);
     }
   };
-  // Handle Bluetooth toggle
-  const handleBluetoothToggle = (value) => {
-    if (!value) {
-      setWarningMessage('Warning: Are you sure you want to disconnect your Bluetooth?');
-      setCurrentToggle('bluetooth');
-      setModalVisible(true);
-    } else {
-      setIsBluetoothConnected(true);
-    }
-  };
 
   // Handle Smart Lock toggle
   const handleSmartLockToggle = (value) => {
@@ -252,11 +226,7 @@ export default function Lock() {
   // Cancel the action in the modal
   const handleCancel = () => {
     setModalVisible(false);
-    if (currentToggle === 'smartLock') {
-      // If canceled, re-enable smart lock
-      setIsSmartLockDisabled('UNLOCK');
-    }
-    setCurrentToggle(null); // Reset the toggle
+    setCurrentToggle(null); 
   };
 
 
@@ -289,35 +259,12 @@ export default function Lock() {
       />
       <TouchableOpacity onPress={openWifiSettings}>
         <View style={[styles.optionContainer, !isWifiConnected && styles.disabledOption]}>
-          {/* <MaterialCommunityIcons
-            name={isWifiConnected ? "wifi" : "wifi-off"}
-            size={30}
-            color={isWifiConnected ? "#4CAF50" : "#F44336"}
-            style={styles.icon}
-          /> */}
           <Text style={[styles.optionText, { textAlign: 'center' }]}>
             {`Click and Find ${bikeID} Wifi then Connect`}
           </Text>
         </View>
       </TouchableOpacity>
-      {/* Bluetooth Toggle */}
-      {/* <View style={[styles.optionContainer, !isBluetoothConnected && styles.disabledOption]}>
-        <MaterialCommunityIcons
-          name={isBluetoothConnected ? "bluetooth-connect" : "bluetooth-off"}
-          size={30}
-          color={isBluetoothConnected ? "#4CAF50" : "#F44336"}
-          style={styles.icon}
-        />
-        <Text style={styles.optionText}>
-          {isBluetoothConnected ? "Connected to Bluetooth" : "Connect to Bluetooth"}
-        </Text>
-        <Switch
-          value={isBluetoothConnected}
-          onValueChange={handleBluetoothToggle}
-          trackColor={{ false: "#767577", true: "#4CAF50" }}
-          thumbColor={isBluetoothConnected ? "#FFFFFF" : "#FFFFFF"}
-        />
-      </View> */}
+      
 
       {/* Smart Lock Toggle */}
       <View style={[styles.optionContainer, !isSmartLockDisabled && styles.disabledOption]}>

@@ -63,7 +63,6 @@ const History = () => {
   };
 
   useEffect(() => {
-    
     if (isLoggedIn && !isTemp) {
       getReservedBike(); // Fetch data only if logged in
 
