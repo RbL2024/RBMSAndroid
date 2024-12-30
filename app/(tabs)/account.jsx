@@ -251,12 +251,12 @@ const Account = () => {
               }
             </View>
             <HorizontalLine style={{ marginTop: RDim.height * .25 }} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25 }}>
-              <View>
+            <View style={{ flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 25 }}>
+              {/* <View>
                 <TouchableOpacity>
                   <Text style={{ color: 'black', fontSize: RDim.width * .04 }}>Terms & Condition</Text>
                 </TouchableOpacity>
-              </View>
+              </View> */}
               <View>
                 <Text style={{ color: 'black', fontSize: RDim.width * .04 }}>&#169; 2024 (RBMS)</Text>
               </View>
