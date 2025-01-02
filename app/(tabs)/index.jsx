@@ -31,11 +31,11 @@ const Card = ({ title, description, imageSource, status }) => {
         style={styles.imageBackground}
         imageStyle={styles.image}
       >
-        {status === 'RESERVED' ? 
-          <View style={[styles.overlay]}><Text style={{ color: 'white', textAlign: 'center', fontSize: 24, fontFamily: 'mplusb' }}>Reserved</Text></View> 
+        {status === 'RESERVED' ?
+          <View style={[styles.overlay]}><Text style={{ color: 'white', textAlign: 'center', fontSize: 24, fontFamily: 'mplusb' }}>Reserved</Text></View>
           : status === 'RENTED' ?
-          <View style={[styles.overlay]}><Text style={{ color: 'white', textAlign: 'center', fontSize: 24, fontFamily: 'mplusb' }}>Rented</Text></View> 
-          : null
+            <View style={[styles.overlay]}><Text style={{ color: 'white', textAlign: 'center', fontSize: 24, fontFamily: 'mplusb' }}>Rented</Text></View>
+            : null
         }
         <View style={styles.cardContent}>
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
@@ -47,15 +47,18 @@ const Card = ({ title, description, imageSource, status }) => {
 };
 
 export default function Index() {
-  const [searchText, setSearchText] = useState("");
   const [topBikes, setTopBikes] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const getBikes = async () => {
+    setLoading(true);
     try {
       const data = await fetchTopBikes();
       setTopBikes(data);
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false); // Step 2: Set loading to false after fetching
     }
   };
   useEffect(() => {
@@ -66,10 +69,6 @@ export default function Index() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const clearInput = () => {
-    setSearchText("");
-    Keyboard.dismiss();
-  };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -105,30 +104,42 @@ export default function Index() {
               New Bikes
             </ThemedText>
           </View>
-          <ScrollView showsVerticalScrollIndicator={true} style={styles.SView} contentContainerStyle={styles.scrollViewCon}>
-            {
-              topBikes?.map((bike, index) => {
+          {
+            !topBikes ? (
+              <View style={{ flex: 1, justifyContent: 'start', alignItems: 'center', marginTop: 200 }}>
+                <ActivityIndicator size="large" color="#355E3B"/>
+                <Text style={{ color: '#355E3B', fontSize: 24, fontFamily: 'mplusb' }}>Loading</Text>
+              </View>
+            )
 
-                return (
-                  <Link
-                    key={index}
-                    href={{
-                      pathname: '/preview',
-                      params: { ...bike }
-                    }}
-                    style={styles.card}
-                  >
-                    <Card
-                      title={bike.bike_name}
-                      description="see details"
-                      imageSource={{ uri: bike.bike_image_url }} // Replace with your image path
-                      status={bike.bike_status}
-                    />
-                  </Link>
-                )
-              })
-            }
-          </ScrollView>
+              : (
+                <ScrollView showsVerticalScrollIndicator={true} style={styles.SView} contentContainerStyle={styles.scrollViewCon}>
+                  {
+                    topBikes?.map((bike, index) => {
+
+                      return (
+                        <Link
+                          key={index}
+                          href={{
+                            pathname: '/preview',
+                            params: { ...bike }
+                          }}
+                          style={styles.card}
+                        >
+                          <Card
+                            title={bike.bike_name}
+                            description="see details"
+                            imageSource={{ uri: bike.bike_image_url }} // Replace with your image path
+                            status={bike.bike_status}
+                          />
+                        </Link>
+                      )
+                    })
+                  }
+                </ScrollView>
+              )
+          }
+
         </View>
       </LinearGradient>
     </TouchableWithoutFeedback>
