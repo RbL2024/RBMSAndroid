@@ -12,8 +12,6 @@ export default function Layout() {
           fontWeight: 'bold',
         },
       }}>
-      {/* Optionally configure static options outside the route.*/}
-      <Stack.Screen name="bikes" options={{headerShown: false}} />
       <Stack.Screen name="lock" options={{}} />
       <Stack.Screen name="timetrack" options={{headerShown: false}} />
       <Stack.Screen name="rentdue" options={{headerShown: false}} />

@@ -44,28 +44,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="notifications"
-        options={{
-          title: "Notifications",
-          tabBarIcon: ({ color }) => (
-            <MaterialIcons
-              name="notifications-active"
-              size={32}
-              color={color}
-            />
-          ),
-          headerTitleStyle:{
-            color:"white",
-            fontSize: 28,
-            fontFamily: 'mplusb'
-          },
-          headerStyle:{
-            backgroundColor:'#355E3B'
-          },
-          tabBarButton: () => null,
-        }}
-      />
-      <Tabs.Screen
         name="account"
         options={{
           title: "Accounts",

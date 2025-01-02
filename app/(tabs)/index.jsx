@@ -107,7 +107,7 @@ export default function Index() {
           </View>
           <ScrollView showsVerticalScrollIndicator={true} style={styles.SView} contentContainerStyle={styles.scrollViewCon}>
             {
-              topBikes.map((bike, index) => {
+              topBikes?.map((bike, index) => {
 
                 return (
                   <Link

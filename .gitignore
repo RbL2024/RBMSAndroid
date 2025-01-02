@@ -44,3 +44,7 @@ expo-env.d.ts
 
 # Miscellaneous
 *.orig.*
+
+#Build
+android/
+ios/

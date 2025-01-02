@@ -60,7 +60,6 @@ const Account = () => {
   
       if (id !== null && name !== null && phone !== null && email !== null && isTemp !== null && username !== null && expToken !== null) {
         if (expToken && isTokenExpired(expToken)) {
-          // Token is expired, log out the user
           Alert.alert(
             'Session Expired', 
             'Your session has expired. Please rent again or make a new account to reserve a bike',
@@ -89,16 +88,16 @@ const Account = () => {
 
   const checkLoginStatus = async () => {
     try {
-      const value = await AsyncStorage.getItem('isLoggedIn'); // Retrieve value from AsyncStorage
+      const value = await AsyncStorage.getItem('isLoggedIn'); 
       if (value !== null) {
-        setIsLoggedIn(JSON.parse(value)); // Parse and set the login status
+        setIsLoggedIn(JSON.parse(value));
       } else {
-        setIsLoggedIn(false); // Default to false if value is null
+        setIsLoggedIn(false);
       }
     } catch (error) {
       console.error('Error retrieving login status:', error);
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
@@ -112,11 +111,9 @@ const Account = () => {
   }
   useFocusEffect(
     React.useCallback(() => {
-      setLoading(true); // Set loading to true before checking
-      checkLoginStatus(); // Call the function to check login status
+      setLoading(true); 
+      checkLoginStatus(); 
       getUserInfo();
-
-      // console.log(tempInfo.name);
     }, [])
   );
 
@@ -133,8 +130,6 @@ const Account = () => {
     setLoading(true);
     await delay(2000);
     try {
-      // await AsyncStorage.removeItem('isLoggedIn'); // Remove login status from AsyncStorage
-      // await AsyncStorage.removeItem('bike_id');
       await AsyncStorage.clear();
       setIsLoggedIn(false); // Update state to reflect logged out status
       nav.navigate('index');
@@ -234,14 +229,6 @@ const Account = () => {
               )}
             </View>
             <View style={{ alignItems: 'center', marginTop: 20, paddingHorizontal: 10 }}>
-              {/* <TouchableOpacity  >
-                <View style={styles.deleteAcc}>
-                  <Text style={{ color: '#AB0505', fontFamily: 'mplusb', fontSize: RDim.width * .05, textAlign: 'center' }}>Delete Account</Text>
-                </View>
-              </TouchableOpacity>
-              <View>
-                <Text style={[{ textAlign: 'center' }]}>Once deleted, all account information will be removed. You will not be able to recover this information</Text>
-              </View> */}
               {
                 tempInfo.isTemp === 'true' ? (
                   <View>
@@ -252,12 +239,7 @@ const Account = () => {
             </View>
             <HorizontalLine style={{ marginTop: RDim.height * .25 }} />
             <View style={{ flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 25 }}>
-              {/* <View>
-                <TouchableOpacity>
-                  <Text style={{ color: 'black', fontSize: RDim.width * .04 }}>Terms & Condition</Text>
-                </TouchableOpacity>
-              </View> */}
-              <View>
+               <View>
                 <Text style={{ color: 'black', fontSize: RDim.width * .04 }}>&#169; 2024 (RBMS)</Text>
               </View>
             </View>
