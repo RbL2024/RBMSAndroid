@@ -432,67 +432,81 @@ export default function Register() {
                 <Text style={styles.termsText}>
                   By using the Rental Bike Management System, you agree to the following terms and conditions:
                 </Text>
-                <Text style={styles.termsText}>
+                <View style={{ marginBottom: 20 }}>
                   <Text>
-                      Protection of Personal Information
+                    Protection of Personal Information
                   </Text>
-                  
-
-                  We are committed to safeguarding your personal information and ensuring its security. We only collect essential data for providing our services in accordance with our Privacy Policy.
-
-                  This system adheres to the provisions of Republic Act 10173, also known as the Data Privacy Act of 2012, which includes:
-
-                  Section 12: Criteria for lawful processing of personal information.
-                  Section 16: Rights of the data subject.
-                  Section 20: Security of personal information.
-                  Section 21: Principle of accountability.
-
-                  Online Payment and Cancellation
-                  The reservation fee must be paid through the online payment options provided in the app.
-                  The rental fee will be paid in the physical store at the time of bike pick-up.
-                  Once a reservation is confirmed and the reservation fee is paid, it is non-refundable and non-cancelable, so please review your booking details carefully.
-
-                  Age Requirement
-                  Only users aged 8 years and above are allowed to rent or use our bicycles.
-                  Users between the ages of 8–10 must provide parental consent and a valid ID if renting in person.
-
-                  Smartphone and App Requirement
-                  A smartphone and our mobile application are required to lock and unlock the bicycles.
-                  The app serves as the primary tool for accessing and controlling the bike's smart lock system.
-
-                  Location Monitoring
-                  We only monitor the current location of the bicycle during your rental period.
-                  Previous locations of the bike are not stored or tracked to ensure privacy and security.
-
-                  Walk-in Clients (8–10 Years Old)
-                  Children aged 8–10 must have a parent or legal guardian present to provide consent for walk-in rentals.
-                  A valid ID for the child must be presented to proceed with the rental.
-
-                  Reservation and Payment
-                  Customers must pay the reservation fee online when booking their rental.
-                  The rental fee will be settled in the physical store at the time of pick-up.
-                  Late bike returns will incur additional charges calculated based on the time exceeded (in minutes or hours).
-
-                  Reservation Policy
-                  If the reservation time expires, customers may extend their reservation by paying for an additional hour.
-                  The maximum allowable extension is one hour.
-
-                  Cancellation of Reservation
-                  If a customer fails to pick up the bike within the allotted reservation time and does not extend their reservation, the reservation will automatically be canceled.
-
-                  Liability
-                  Customers are responsible for the bike during the rental period.
-                  Any damage or issues with the bike must be reported immediately.
-
-                  Compliance
-                  Customers agree to adhere to all local laws and regulations regarding bike usage.
-
-                  Changes to Terms
-                  These terms and conditions may be updated periodically.
-                  Customers are encouraged to review the terms regularly.
-
-                  By using our service, you confirm that you have read, understood, and agree to these terms and conditions.
-                </Text>
+                  <Text>
+                    We are committed to safeguarding your personal information and ensuring its security. We only collect essential data for providing our services in accordance with our Privacy Policy.{`\n`}
+                  </Text>
+                  <Text>
+                    This system adheres to the provisions of Republic Act 10173, also known as the Data Privacy Act of 2012, which includes:
+                  </Text>
+                  <Text>
+                    Section 12: Criteria for lawful processing of personal information.{`\n`}
+                    Section 16: Rights of the data subject.{`\n`}
+                    Section 20: Security of personal information.{`\n`}
+                    Section 21: Principle of accountability.{`\n`}
+                  </Text>
+                  <Text>
+                    Online Payment and Cancellation{`\n`}
+                    The reservation fee must be paid through the online payment options provided in the app.{`\n`}
+                    The rental fee will be paid in the physical store at the time of bike pick-up.{`\n`}
+                    Once a reservation is confirmed and the reservation fee is paid, it is non-refundable and non-cancelable, so please review your booking details carefully.{`\n`}
+                  </Text>
+                  <Text>
+                    Age Requirement{`\n`}
+                    Only users aged 8 years and above are allowed to rent or use our bicycles.{`\n`}
+                    Users between the ages of 8–10 must provide parental consent and a valid ID if renting in person.{`\n`}
+                  </Text>
+                  <Text>
+                    Smartphone and App Requirement{`\n`}
+                    A smartphone and our mobile application are required to lock and unlock the bicycles.{`\n`}
+                    The app serves as the primary tool for accessing and controlling the bike's smart lock system.{`\n`}
+                  </Text>
+                  <Text>
+                    Location Monitoring{`\n`}
+                    We only monitor the current location of the bicycle during your rental period.{`\n`}
+                    Previous locations of the bike are not stored or tracked to ensure privacy and security.{`\n`}
+                  </Text>
+                  <Text>
+                    Walk-in Clients (8–10 Years Old){`\n`}
+                    Children aged 8–10 must have a parent or legal guardian present to provide consent for walk-in rentals.{`\n`}
+                    A valid ID for the child must be presented to proceed with the rental.{`\n`}
+                  </Text>
+                  <Text>
+                    Reservation and Payment{`\n`}
+                    Customers must pay the reservation fee online when booking their rental.{`\n`}
+                    The rental fee will be settled in the physical store at the time of pick-up.{`\n`}
+                    Late bike returns will incur additional charges calculated based on the time exceeded (in minutes or hours).{`\n`}
+                  </Text>
+                  <Text>
+                    Reservation Policy{`\n`}
+                    If the reservation time expires, customers may extend their reservation by paying for an additional hour.{`\n`}
+                    The maximum allowable extension is one hour.{`\n`}
+                  </Text>
+                  <Text>
+                    Cancellation of Reservation{`\n`}
+                    If a customer fails to pick up the bike within the allotted reservation time and does not extend their reservation, the reservation will automatically be canceled.{`\n`}
+                  </Text>
+                  <Text>
+                    Liability{`\n`}
+                    Customers are responsible for the bike during the rental period.{`\n`}
+                    Any damage or issues with the bike must be reported immediately.{`\n`}
+                  </Text>
+                  <Text>
+                    Compliance{`\n`}
+                    Customers agree to adhere to all local laws and regulations regarding bike usage.{`\n`}
+                  </Text>
+                  <Text>
+                    Changes to Terms{`\n`}
+                    These terms and conditions may be updated periodically.{`\n`}
+                    Customers are encouraged to review the terms regularly.{`\n`}
+                  </Text>
+                  <Text>
+                    By using our service, you confirm that you have read, understood, and agree to these terms and conditions.
+                  </Text>
+                </View>
               </ScrollView>
               <TouchableOpacity
                 style={styles.mdlbutton}
