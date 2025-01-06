@@ -14,7 +14,8 @@
     "production": {
       "autoIncrement": true
     },
-    "preview-production": {
+    "release": {
+      "autoIncrement": true,
       "android": {
         "buildType": "apk"
       }
