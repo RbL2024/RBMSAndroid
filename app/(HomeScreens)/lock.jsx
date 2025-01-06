@@ -40,7 +40,7 @@ export default function Lock() {
   
         console.log('Sending data:', data); 
   
-        const response = await axios.post('http://192.168.1.189:80/post-message', data, {
+        const response = await axios.post('http://192.168.100.189:80/post-message', data, {
           headers: {
             'Content-Type': 'application/json',  // Correct content type
           },
