@@ -26,51 +26,40 @@ export default function Lock() {
 
   const [bikeID, setBikeID] = useState(null);
 
-  const handleESP = async (lockState, alarmState) => {
-    try {
-      const bID = await AsyncStorage.getItem('bike_id');
-      const email = await AsyncStorage.getItem('email');
-      if (bID && email) {
-        const data = {
-          bid: bID,
-          email: email,
-          lockState: lockState,
-          alarmState: alarmState
-        };
+  // const handleESP = async (lockState, alarmState) => {
+  //   try {
+  //     const bID = await AsyncStorage.getItem('bike_id');
+  //     const email = await AsyncStorage.getItem('email');
+  //     if (bID && email) {
+  //       const data = {
+  //         bid: bID,
+  //         email: email,
+  //         lockState: lockState,
+  //         alarmState: alarmState
+  //       };
   
-        console.log('Sending data:', data); 
+  //       console.log('Sending data:', data); 
   
-        const response = await axios.post('http://192.168.100.189:80/post-message', data, {
-          headers: {
-            'Content-Type': 'application/json',  // Correct content type
-          },
-        });
+  //       const response = await axios.post('http://192.168.100.189:80/post-message', data, {
+  //         headers: {
+  //           'Content-Type': 'application/json',  // Correct content type
+  //         },
+  //       });
   
-        console.log('Server Response:', response.data); // Log the server response
+  //       console.log('Server Response:', response.data); // Log the server response
         
-      } else {
-        console.error('Missing bike_id or email');
-      }
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        error.response.data,
-        [{ text: 'OK', onPress: () => navigation.navigate('index') }],
-        { cancelable: false }
-      );
-      // if (error.response) {
-      //   // The request was made and the server responded with a status code
-      //   // that falls out of the range of 2xx
-      //   console.error('Error response data:', error.response.data);
-      //   console.error('Error response status:', error.response.status);
-      //   console.error('Error response headers:', error.response.headers);
-      // } else {
-      //   // Something happened in setting up the request that triggered an Error
-      //   console.error('Error message:', error.message);
-        
-      // }
-    }
-  };
+  //     } else {
+  //       console.error('Missing bike_id or email');
+  //     }
+  //   } catch (error) {
+  //     Alert.alert(
+  //       'Error',
+  //       error.response.data,
+  //       [{ text: 'OK', onPress: () => navigation.navigate('index') }],
+  //       { cancelable: false }
+  //     );
+  //   }
+  // };
 
   useEffect(() => {
     const initials = async () => {
@@ -182,7 +171,7 @@ export default function Lock() {
       setCurrentToggle('smartLock');
       setModalVisible(true);
     } else {
-      handleESP(true, isAlarmDisabled)
+      // handleESP(true, isAlarmDisabled)
       updateLockState(true);
       setIsSmartLockDisabled(true);
     }
@@ -195,7 +184,7 @@ export default function Lock() {
       setCurrentToggle('alarm');
       setModalVisible(true);
     } else {
-      handleESP(isSmartLockDisabled, true)
+      // handleESP(isSmartLockDisabled, true)
       updateAlarmState(true)
       setIsAlarmDisabled(true);
     }
@@ -209,12 +198,12 @@ export default function Lock() {
       setIsSmartLockDisabled(false);
       setIsAlarmDisabled(false);
     } else if (currentToggle === 'alarm') {
-      handleESP(isSmartLockDisabled, false)
+      // handleESP(isSmartLockDisabled, false)
       updateAlarmState(false)
       setIsAlarmDisabled(false);
     } else if (currentToggle === 'smartLock') {
       // If confirmed, disable smart lock
-      handleESP(false, isAlarmDisabled)
+      // handleESP(false, isAlarmDisabled)
       updateLockState(false);
       updateAlarmState(false)
       setIsAlarmDisabled(false);
